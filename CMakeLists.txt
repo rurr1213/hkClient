@@ -9,7 +9,7 @@
 # Find required libraries (replace with your actual find_package commands)
 find_package(Threads REQUIRED)
 
-set(TARGET_NAME hkClient)
+set(TARGET_NAME hkClientAppLinux)
 
 # Example: If using a library installed with CMake
 # find_package(nlohmann_json REQUIRED)
@@ -17,10 +17,10 @@ set(TARGET_NAME hkClient)
 
 # Define source files
 set(SOURCE_FILES
-    backChannelClientLinux/backChannelClientApp.cpp
+    hkClientLinux/hkClientAppLinux.cpp
     backChannelClient.cpp
     hyperCubeClient.cpp
-    backChannelMgr.cpp
+    hkClientMgr.cpp
 )
 
 add_executable(${TARGET_NAME} ${SOURCE_FILES})

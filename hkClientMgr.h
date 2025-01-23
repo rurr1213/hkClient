@@ -98,7 +98,7 @@ public:
 };
 
 
-class BackChannelMgr : IBackChannelMgr
+class hkClientMgr : IBackChannelMgr
 {
 
 	BackChannelDevice backChannelDevice;
@@ -112,8 +112,8 @@ class BackChannelMgr : IBackChannelMgr
 
 public:
 
-	BackChannelMgr();
-	~BackChannelMgr();
+	hkClientMgr();
+	~hkClientMgr();
 	void init(HKSystemInfo& rhkSystemInfo);
 	void deinit();
 	void process(void);
