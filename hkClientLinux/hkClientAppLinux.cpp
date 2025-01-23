@@ -4,12 +4,12 @@
 //#include "tcp.h"
 //#include "TcpStringClientServer.h"
 #include <iostream>
-#include "hyperCubeClient.h"
+#include "hkClient.h"
 #include "kbhit.h"
 
 using namespace std;
 
-class HyperCubeClientShell : public HyperCubeClient
+class HyperCubeClientShell : public HKClient
 {
     public:
         bool doShell(void);
@@ -48,9 +48,9 @@ bool HyperCubeClientShell::doEchoTest(void)
     double avgTime = (totalTime / totalTests) * 1000000;
     double avgBytes = ((double)totalBytesSent / (double)totalTests);
     double totalBPS = ((double)(totalBytesSent * 8) / totalTime) / 1000000.0;
-    LOG_INFO("HyperCubeClient::doEchoTest()", "Avg time per test (us): " + std::to_string(avgTime), 0);
-    LOG_INFO("HyperCubeClient::doEchoTest()", "Avg bytes per test : " + std::to_string((int)avgBytes), 0);
-    LOG_INFO("HyperCubeClient::doEchoTest()", "MBps: " + std::to_string(totalBPS), 0);
+    LOG_INFO("HKClient::doEchoTest()", "Avg time per test (us): " + std::to_string(avgTime), 0);
+    LOG_INFO("HKClient::doEchoTest()", "Avg bytes per test : " + std::to_string((int)avgBytes), 0);
+    LOG_INFO("HKClient::doEchoTest()", "MBps: " + std::to_string(totalBPS), 0);
 */
     return true;
 }
@@ -59,7 +59,7 @@ bool HyperCubeClientShell::doShell(void)
 {
     /*
     if (!isConnected()) {
-        std::cout << "HyperCubeClient(): Server not available\n\r";
+        std::cout << "HKClient(): Server not available\n\r";
         return false;
     }
     */

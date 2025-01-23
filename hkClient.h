@@ -21,11 +21,11 @@
 #define uint128_t   __int128
 #endif
 
-class IHyperCubeClientCore
+class IHKClientCore
 {
     Ctcp::Client& rtcpClient;
 public:
-    IHyperCubeClientCore(Ctcp::Client& _rtcpClient) :
+    IHKClientCore(Ctcp::Client& _rtcpClient) :
         rtcpClient{ _rtcpClient } {};
 
 //    virtual bool tcpClose(void) { return rtcpClient.close(); }
@@ -45,7 +45,7 @@ public:
     virtual bool onClosedForData(void) = 0; // closed for data
 };
 
-class HyperCubeClientCore : IHyperCubeClientCore
+class HKClientCore : IHKClientCore
 {
     private:
 
@@ -63,7 +63,7 @@ class HyperCubeClientCore : IHyperCubeClientCore
 
         class RecvActivity : CstdThread, RecvPacketBuilder::IReadDataObject {
         private:
-            IHyperCubeClientCore* pIHyperCubeClientCore = 0;
+            IHKClientCore* pIHyperCubeClientCore = 0;
             RecvPacketBuilder recvPacketBuilder;
             std::mutex recvPacketBuilderLock;
             PacketQWithLock inPacketQ;
@@ -73,7 +73,7 @@ class HyperCubeClientCore : IHyperCubeClientCore
             RecvPacketBuilder::READSTATUS readPackets(void);
             int readData(void* pdata, int dataLen);
         public:
-            RecvActivity(IHyperCubeClientCore* pIHyperCubeClientCore, SignallingObject& _signallingObject);
+            RecvActivity(IHKClientCore* pIHyperCubeClientCore, SignallingObject& _signallingObject);
             bool init(void);
             bool deinit(void);
             bool receiveIn(Packet::UniquePtr& rppacket);
@@ -83,7 +83,7 @@ class HyperCubeClientCore : IHyperCubeClientCore
 
         class SendActivity : public CstdThread {
         private:
-            IHyperCubeClientCore* pIHyperCubeClientCore = 0;
+            IHKClientCore* pIHyperCubeClientCore = 0;
             WritePacketBuilder writePacketBuilder;
             std::mutex writePacketBuilderLock;
             PacketQWithLock outPacketQ;
@@ -96,7 +96,7 @@ class HyperCubeClientCore : IHyperCubeClientCore
             int sendDataOut(const void* pdata, const int dataLen);
 
         public:
-            SendActivity(IHyperCubeClientCore* _pIHyperCubeClientCore);
+            SendActivity(IHKClientCore* _pIHyperCubeClientCore);
             ~SendActivity();
             bool init(void);
             bool deinit(void);
@@ -123,9 +123,9 @@ class HyperCubeClientCore : IHyperCubeClientCore
                 std::string name;
                 std::string address;
                 unsigned int port = HYPERCUBE_SERVER_PORT;
-                IHyperCubeClientCore* pIHyperCubeClientCore = 0;
+                IHKClientCore* pIHyperCubeClientCore = 0;
                 Server() {};
-                bool init(IHyperCubeClientCore* _pIHyperCubeClientCore, std::string _serverName = "");
+                bool init(IHKClientCore* _pIHyperCubeClientCore, std::string _serverName = "");
                 bool updateDnsAddress(std::string _serverName = "");
                 bool isValid(void) { return (address != ""); }
             };
@@ -139,21 +139,21 @@ class HyperCubeClientCore : IHyperCubeClientCore
                 int index = WORKING;
                 Server servers[3];
                 Server& activeServer = servers[WORKING];
-                IHyperCubeClientCore* pIHyperCubeClientCore = 0;
+                IHKClientCore* pIHyperCubeClientCore = 0;
             public:
                 Servers() {
                     servers[WORKING].name = HYPERCUBE_SERVER_NAME_SECONDARY;
                     servers[SECONDARY].name = HYPERCUBE_SERVER_NAME_SECONDARY;
                     servers[PRIMARY].name = HYPERCUBE_SERVER_NAME_PRIMARY;
                 };
-                bool init(IHyperCubeClientCore* _pIHyperCubeClientCore, std::string _serverName);
+                bool init(IHKClientCore* _pIHyperCubeClientCore, std::string _serverName);
                 Server& getActiveServer(void);
                 Server& getActiveServerInfo(void) { return activeServer; }
                 std::string getActiveServerAddress(void) { return activeServer.address; }
                 Server& getNextActiveServer(void);
             };
 
-            IHyperCubeClientCore* pIHyperCubeClientCore = 0;
+            IHKClientCore* pIHyperCubeClientCore = 0;
             bool socketValid(void) { return pIHyperCubeClientCore->tcpSocketValid(); }
             bool connect(void);
             Servers servers;
@@ -188,7 +188,7 @@ class HyperCubeClientCore : IHyperCubeClientCore
             uint64_t connectionId;
             //uuid_t applicationInstanceUUID;
 
-            SignallingObject(IHyperCubeClientCore* _pIHyperCubeClientCore);
+            SignallingObject(IHKClientCore* _pIHyperCubeClientCore);
             void init(std::string _serverName);
             void deinit(void);
             virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket);
@@ -233,8 +233,8 @@ protected:
         bool sendMsgOut(Msg& msg);
         virtual bool onReceivedData(void);
 public:
-        HyperCubeClientCore();
-        ~HyperCubeClientCore();
+        HKClientCore();
+        ~HKClientCore();
 
         bool init(std::string serverName = HYPERCUBE_SERVER_NAME_PRIMARY, bool reInit = true);
         bool deinit(void);
@@ -248,12 +248,12 @@ public:
         void setDefaultGroupInfo(const GroupInfo& rgroupInfo) { signallingObject.setDefaultGroupInfo(rgroupInfo); }
 };
 
-class HyperCubeClient : public HyperCubeClientCore
+class HKClient : public HKClientCore
 {
 protected:
 public:
-    HyperCubeClient();
-    ~HyperCubeClient();
+    HKClient();
+    ~HKClient();
     bool subscribe(std::string _groupName) { return signallingObject.subscribe(_groupName);}
     bool publish(void) { return signallingObject.publish();}
     bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}

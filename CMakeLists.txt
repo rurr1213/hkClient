@@ -18,8 +18,7 @@ set(TARGET_NAME hkClientAppLinux)
 # Define source files
 set(SOURCE_FILES
     hkClientLinux/hkClientAppLinux.cpp
-    backChannelClient.cpp
-    hyperCubeClient.cpp
+    hkClient.cpp
     hkClientMgr.cpp
 )
 
@@ -33,7 +32,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${PROJECT_SOURCE_DIR}/src/CommonCppDartCode/cpp
     ${PROJECT_SOURCE_DIR}/src/CommonCppDartCode/cpp/json
     ${PROJECT_SOURCE_DIR}/src/CommonCppDartCode/Messages
-    ${PROJECT_SOURCE_DIR}/src/backChannelClient
+    ${PROJECT_SOURCE_DIR}/src/hkClient
     # For external libraries included without CMake
     # /path/to/json  # Include path for the json library
 )

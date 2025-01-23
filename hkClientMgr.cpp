@@ -5,66 +5,66 @@
 
 // ------------------------------------------------------------
 
-BackChannelDevice::BackChannelDevice(IBackChannelMgr* _pbackChannelMgr, SessionInfo& _rreferenceInfo) :
-	pbackChannelMgr{ _pbackChannelMgr},
+HKDevice::HKDevice(IHKMgr* _pbackChannelMgr, SessionInfo& _rreferenceInfo) :
+	phkMgr{ _pbackChannelMgr},
 	rreferenceInfo{ _rreferenceInfo }
 {
 }
 
-BackChannelDevice::~BackChannelDevice()
+HKDevice::~HKDevice()
 {
 
 }
 
-void BackChannelDevice::init(std::string serverName, bool reInit)
+void HKDevice::init(std::string serverName, bool reInit)
 {
-	BackChannelClient::init(serverName, reInit);
+	HKClient::init(serverName, reInit);
 }
 
-void BackChannelDevice::deinit()
+void HKDevice::deinit()
 {
-	BackChannelClient::deinit();
+	HKClient::deinit();
 }
 
-bool BackChannelDevice::onOpenForData(void)
+bool HKDevice::onOpenForData(void)
 {
 	rreferenceInfo.sessionKey++;
 	numSendMessages = -1;
 	numReadMessages = 0;
-	pbackChannelMgr->onOpenForData();
+	phkMgr->onOpenForData();
 	stream.setOpened();
 	return true;
 }
 
-bool BackChannelDevice::onClosedForData(void)
+bool HKDevice::onClosedForData(void)
 {
 	if (stream.isOpened()) {
 		stream.setClosed();
-		pbackChannelMgr->onClosedForData();
+		phkMgr->onClosedForData();
 	}
 	return true;
 }
 
-bool BackChannelDevice::onReceivedData(void)
+bool HKDevice::onReceivedData(void)
 {
-	HyperCubeClientCore::onReceivedData();
+	HKClientCore::onReceivedData();
 	return true;
 }
 
-bool BackChannelDevice::recvFromDevice(void)
+bool HKDevice::recvFromDevice(void)
 {
 	if (!stream.isOpened()) return false;
 
 	bool stat = false;
 	PacketEx packetEx;
-	while (BackChannelClient::getPacket(packetEx.packet)) {
+	while (HKClient::getPacket(packetEx.packet)) {
 		packetEx.deviceId = DEVICEID::BACKCHANNEL;
 		stat = true;
 	}
 	return stat;
 }
 
-bool BackChannelDevice::sendMsg(Msg& rmsg, bool forceSend)
+bool HKDevice::sendMsg(Msg& rmsg, bool forceSend)
 {
 	if (!forceSend) {
 		if (!stream.isOpened()) return false;
@@ -72,7 +72,7 @@ bool BackChannelDevice::sendMsg(Msg& rmsg, bool forceSend)
 
 	rreferenceInfo.setupSession(rmsg, ++numSendMessages);
 	rmsg.deviceAppKey = 123;
-	return BackChannelClient::sendMsgOut(rmsg);
+	return HKClient::sendMsgOut(rmsg);
 }
 
 // ------------------------------------------------------------
@@ -81,7 +81,7 @@ int hkClientMgr::numInputMsgs{ 0 };
 int hkClientMgr::numOutputMsgs{ 0 };
 
 hkClientMgr::hkClientMgr() :
-	backChannelDevice{this, sessionInfo}
+	hkDevice{this, sessionInfo}
 {
 }
 
@@ -106,14 +106,14 @@ void hkClientMgr::init(HKSystemInfo& rhkSystemInfo)
 
 	GroupInfo defaultGroupInfo;
 	defaultGroupInfo.groupName = rhkSystemInfo.groupName;
-	backChannelDevice.setConnectionInfo(connectionInfo);
-	backChannelDevice.setDefaultGroupInfo(defaultGroupInfo);
-	backChannelDevice.init();
+	hkDevice.setConnectionInfo(connectionInfo);
+	hkDevice.setDefaultGroupInfo(defaultGroupInfo);
+	hkDevice.init();
 }
 
 void hkClientMgr::deinit(void)
 {
-	backChannelDevice.deinit();
+	hkDevice.deinit();
 }
 
 bool hkClientMgr::addNewConnection(void)
@@ -130,7 +130,7 @@ bool hkClientMgr::onOpenForData(void)
 {
 	MsgDiscoveryMulticastHello msg;
 //	CommMgr::createHelloMsg(msg);
-	backChannelDevice.sendMsg(msg, true);
+	hkDevice.sendMsg(msg, true);
 
 	int deviceId = (int)DEVICEID::BACKCHANNEL;
 	LOG_INFO("hkClientMgr::onOpenForData()", "DeviceIndex", (int)deviceId);
@@ -150,7 +150,7 @@ bool hkClientMgr::postToDevice(std::unique_ptr<Msg>& pmsg)
 {
 	//assert((pmsg->localParam1 == (int)DEVICEID::BACKCHANNEL);
 
-	bool stat = backChannelDevice.sendMsg(*pmsg);
+	bool stat = hkDevice.sendMsg(*pmsg);
 
 	hkClientMgr::numOutputMsgs++;
 	LOG_STATEINT("hkClientMgr-NumOutputMsgs", hkClientMgr::numOutputMsgs);
@@ -160,7 +160,7 @@ bool hkClientMgr::postToDevice(std::unique_ptr<Msg>& pmsg)
 
 void hkClientMgr::process(void)
 {
-	backChannelDevice.recvFromDevice();
+	hkDevice.recvFromDevice();
 }
 /*
 void hkClientMgr::onGlobalConfigUpdate(Config::Status& configStatus)
@@ -171,7 +171,7 @@ void hkClientMgr::onGlobalConfigUpdate(Config::Status& configStatus)
 		std::string serverIP1;
 		serverIP1 = jglobalConfig["server"]["ip1"];
 		if (serverIP1.size() > 0) {
-			backChannelDevice.init(serverIP1, true);
+			HKDevice.init(serverIP1, true);
 		}
 	}
 	catch (std::exception e) {

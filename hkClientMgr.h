@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <atomic>
 
-#include "backChannelClient.h"
+#include "hkClient.h"
 #include "Logger.h"
 
 #define BACKCHANNEL_INITIAL_SERVER_NAME "primary.hyperkube.net"
@@ -66,24 +66,24 @@ public:
 };
 
 
-class IBackChannelMgr
+class IHKMgr
 {
 public:
 	virtual bool onOpenForData(void) = 0;
 	virtual bool onClosedForData(void) = 0;
 };
 
-class BackChannelDevice : public BackChannelClient
+class HKDevice : public HKClient
 {
 	Stream stream;
 	SessionInfo& rreferenceInfo;
-	IBackChannelMgr* pbackChannelMgr;
+	IHKMgr* phkMgr;
 	int numReadMessages = 0;
 	int numSendMessages = 0;
 
 public:
-	BackChannelDevice(IBackChannelMgr* _pbackChannelMgr, SessionInfo& _rreferenceInfo);
-	~BackChannelDevice();
+	HKDevice(IHKMgr* _phkMgr, SessionInfo& _rreferenceInfo);
+	~HKDevice();
 	void init(std::string serverName = "", bool reInit = false);
 	void deinit();
 
@@ -98,10 +98,10 @@ public:
 };
 
 
-class hkClientMgr : IBackChannelMgr
+class hkClientMgr : IHKMgr
 {
 
-	BackChannelDevice backChannelDevice;
+	HKDevice hkDevice;
 	SessionInfo sessionInfo;
 	json jglobalConfig;
 
