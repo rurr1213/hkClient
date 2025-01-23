@@ -18,12 +18,12 @@ BackChannelDevice::~BackChannelDevice()
 
 void BackChannelDevice::init(std::string serverName, bool reInit)
 {
-	BackChannelClient::init(serverName, reInit);
+	HKClient::init(serverName, reInit);
 }
 
 void BackChannelDevice::deinit()
 {
-	BackChannelClient::deinit();
+	HKClient::deinit();
 }
 
 bool BackChannelDevice::onOpenForData(void)
@@ -47,7 +47,7 @@ bool BackChannelDevice::onClosedForData(void)
 
 bool BackChannelDevice::onReceivedData(void)
 {
-	HyperCubeClientCore::onReceivedData();
+	HKClientCore::onReceivedData();
 	return true;
 }
 
@@ -57,7 +57,7 @@ bool BackChannelDevice::recvFromDevice(void)
 
 	bool stat = false;
 	PacketEx packetEx;
-	while (BackChannelClient::getPacket(packetEx.packet)) {
+	while (HKClient::getPacket(packetEx.packet)) {
 		packetEx.deviceId = DEVICEID::BACKCHANNEL;
 		stat = true;
 	}
@@ -72,7 +72,7 @@ bool BackChannelDevice::sendMsg(Msg& rmsg, bool forceSend)
 
 	rreferenceInfo.setupSession(rmsg, ++numSendMessages);
 	rmsg.deviceAppKey = 123;
-	return BackChannelClient::sendMsgOut(rmsg);
+	return HKClient::sendMsgOut(rmsg);
 }
 
 // ------------------------------------------------------------

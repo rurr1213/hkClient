@@ -8,7 +8,7 @@
 #endif
 #include <errno.h>
 
-#include "hyperCubeClient.h"
+#include "hkClient.h"
 #include "Common.h"
 #include "Packet.h"
 #include "mserdes.h"
@@ -25,12 +25,12 @@ using namespace std;
 
 // ------------------------------------------------------------------------------------------------
 
-void HyperCubeClientCore::PacketQWithLock::init(void)
+void HKClientCore::PacketQWithLock::init(void)
 {
     deinit();
 }
 
-void HyperCubeClientCore::PacketQWithLock::deinit(void) {
+void HKClientCore::PacketQWithLock::deinit(void) {
     std::lock_guard<std::mutex> lock(qLock);
     while (std::deque<Packet::UniquePtr>::size() > 0) {
         std::unique_ptr<Packet> rpacket = std::move(std::deque<Packet::UniquePtr>::front());
@@ -40,12 +40,12 @@ void HyperCubeClientCore::PacketQWithLock::deinit(void) {
     }
 }
 
-void HyperCubeClientCore::PacketQWithLock::push(std::unique_ptr<Packet>& rpacket) {
+void HKClientCore::PacketQWithLock::push(std::unique_ptr<Packet>& rpacket) {
     std::lock_guard<std::mutex> lock(qLock);
     push_back(std::move(rpacket));
 }
 
-bool HyperCubeClientCore::PacketQWithLock::pop(std::unique_ptr<Packet>& rpacket) {
+bool HKClientCore::PacketQWithLock::pop(std::unique_ptr<Packet>& rpacket) {
     std::lock_guard<std::mutex> lock(qLock);
     if (empty()) return false;
     rpacket = std::move(std::deque<Packet::UniquePtr>::front());
@@ -53,7 +53,7 @@ bool HyperCubeClientCore::PacketQWithLock::pop(std::unique_ptr<Packet>& rpacket)
     return true;
 }
 
-bool HyperCubeClientCore::PacketQWithLock::isEmpty(void)
+bool HKClientCore::PacketQWithLock::isEmpty(void)
 {
     std::lock_guard<std::mutex> lock(qLock);
     return empty();
@@ -62,13 +62,13 @@ bool HyperCubeClientCore::PacketQWithLock::isEmpty(void)
 // ----------------------------------------------------------------------
 
 
-HyperCubeClientCore::RecvActivity::RecvActivity(IHyperCubeClientCore* pIHyperCubeClientCore, SignallingObject& _signallingObject) :
+HKClientCore::RecvActivity::RecvActivity(IHKClientCore* pIHyperCubeClientCore, SignallingObject& _signallingObject) :
     CstdThread(this),
     pIHyperCubeClientCore{ pIHyperCubeClientCore },
     recvPacketBuilder(*this, COMMON_PACKETSIZE_MAX)
 {};
 
-bool HyperCubeClientCore::RecvActivity::init(void)
+bool HKClientCore::RecvActivity::init(void)
 {
     eventReadyToRead.reset();
     std::lock_guard<std::mutex> lock(recvPacketBuilderLock);
@@ -77,7 +77,7 @@ bool HyperCubeClientCore::RecvActivity::init(void)
     CstdThread::init(true);
     return true;
 }
-bool HyperCubeClientCore::RecvActivity::deinit(void)
+bool HKClientCore::RecvActivity::deinit(void)
 {
     eventReadyToRead.notify();
     // locking here causes a deadlock during shutdown as readPackets() cannot get lock to shutdown
@@ -91,7 +91,7 @@ bool HyperCubeClientCore::RecvActivity::deinit(void)
     return true;
 }
 
-bool HyperCubeClientCore::RecvActivity::threadFunction(void)
+bool HKClientCore::RecvActivity::threadFunction(void)
 {
     do {
         eventReadyToRead.wait();
@@ -102,7 +102,7 @@ bool HyperCubeClientCore::RecvActivity::threadFunction(void)
                 pIHyperCubeClientCore->onReceivedData();
                 break;
             case RecvPacketBuilder::READSTATUS::READERROR:
-                LOG_WARNING("HyperCubeClientCore::RecvActivity::threadFunction()", "peer error", (int)readStatus);
+                LOG_WARNING("HKClientCore::RecvActivity::threadFunction()", "peer error", (int)readStatus);
             case RecvPacketBuilder::READSTATUS::PEERSHUTDOWN:
                 pIHyperCubeClientCore->onDisconnect();
                 eventReadyToRead.reset();
@@ -110,7 +110,7 @@ bool HyperCubeClientCore::RecvActivity::threadFunction(void)
             case RecvPacketBuilder::READSTATUS::MOREDATANEEDED:
                 break;
             default:
-                LOG_WARNING("HyperCubeClientCore::RecvActivity::threadFunction()", "invalid state", (int)readStatus);
+                LOG_WARNING("HKClientCore::RecvActivity::threadFunction()", "invalid state", (int)readStatus);
                 break;
         }
     } while (!checkIfShouldExit());
@@ -118,7 +118,7 @@ bool HyperCubeClientCore::RecvActivity::threadFunction(void)
     return true;
 }
 
-RecvPacketBuilder::READSTATUS HyperCubeClientCore::RecvActivity::readPackets(void)
+RecvPacketBuilder::READSTATUS HKClientCore::RecvActivity::readPackets(void)
 {
     std::lock_guard<std::mutex> lock(recvPacketBuilderLock);
 
@@ -133,41 +133,41 @@ RecvPacketBuilder::READSTATUS HyperCubeClientCore::RecvActivity::readPackets(voi
     return readStatus;
 }
 
-int HyperCubeClientCore::RecvActivity::readData(void* pdata, int dataLen)
+int HKClientCore::RecvActivity::readData(void* pdata, int dataLen)
 {
     int res = pIHyperCubeClientCore->tcpRecv((char*)pdata, dataLen);
     return res;
 }
 
-bool HyperCubeClientCore::RecvActivity::onConnect(void)
+bool HKClientCore::RecvActivity::onConnect(void)
 {
     eventReadyToRead.notify();
     return true;
 }
 
-bool HyperCubeClientCore::RecvActivity::onDisconnect(void)
+bool HKClientCore::RecvActivity::onDisconnect(void)
 {
     eventReadyToRead.reset();
     return true;
 }
 
 
-bool HyperCubeClientCore::RecvActivity::receiveIn(Packet::UniquePtr& rppacket) {
+bool HKClientCore::RecvActivity::receiveIn(Packet::UniquePtr& rppacket) {
     bool stat = inPacketQ.pop(rppacket);
     return stat;
 }
 
 // ------------------------------------------------------------------
 
-HyperCubeClientCore::SendActivity::SendActivity(IHyperCubeClientCore* _pIHyperCubeClientCore) :
+HKClientCore::SendActivity::SendActivity(IHKClientCore* _pIHyperCubeClientCore) :
     CstdThread(this),
     pIHyperCubeClientCore{ _pIHyperCubeClientCore },
     writePacketBuilder(COMMON_PACKETSIZE_MAX)
 {};
 
-HyperCubeClientCore::SendActivity::~SendActivity() {};
+HKClientCore::SendActivity::~SendActivity() {};
 
-bool HyperCubeClientCore::SendActivity::init(void) {
+bool HKClientCore::SendActivity::init(void) {
     std::lock_guard<std::mutex> lock(writePacketBuilderLock);
     writePacketBuilder.init();
     eventPacketsAvailableToSend.reset();
@@ -175,7 +175,7 @@ bool HyperCubeClientCore::SendActivity::init(void) {
     return true;
 }
 
-bool HyperCubeClientCore::SendActivity::deinit(void) {
+bool HKClientCore::SendActivity::deinit(void) {
     CstdThread::setShouldExit();
     eventPacketsAvailableToSend.notify();
     CstdThread::deinit(true);
@@ -186,21 +186,21 @@ bool HyperCubeClientCore::SendActivity::deinit(void) {
 }
 
 
-bool HyperCubeClientCore::SendActivity::threadFunction(void)
+bool HKClientCore::SendActivity::threadFunction(void)
 {
     do {
         eventPacketsAvailableToSend.wait();
         eventPacketsAvailableToSend.reset();
         if (checkIfShouldExit()) break;
         if (!writePackets()) {
-            LOG_WARNING("HyperCubeClientCore::SendActivity::threadFunction()", "writePackets failed", 0);
+            LOG_WARNING("HKClientCore::SendActivity::threadFunction()", "writePackets failed", 0);
         }
     } while (!checkIfShouldExit());
     exiting();
     return true;
 }
 
-bool HyperCubeClientCore::SendActivity::writePacket(void)
+bool HKClientCore::SendActivity::writePacket(void)
 {
     std::lock_guard<std::mutex> lock(writePacketBuilderLock);
     Packet* packet = 0;
@@ -227,7 +227,7 @@ bool HyperCubeClientCore::SendActivity::writePacket(void)
     return sendDone;
 }
 
-bool HyperCubeClientCore::SendActivity::writePackets(void)
+bool HKClientCore::SendActivity::writePackets(void)
 {
     bool sendDone = false;
     do {
@@ -236,19 +236,19 @@ bool HyperCubeClientCore::SendActivity::writePackets(void)
     return sendDone;
 }
 
-bool HyperCubeClientCore::SendActivity::sendOut(Packet::UniquePtr& rppacket)
+bool HKClientCore::SendActivity::sendOut(Packet::UniquePtr& rppacket)
 {
     outPacketQ.push(rppacket);
     eventPacketsAvailableToSend.notify();
     return true;
 }
 
-int HyperCubeClientCore::SendActivity::sendDataOut(const void* pdata, const int dataLen)
+int HKClientCore::SendActivity::sendDataOut(const void* pdata, const int dataLen)
 {
     return pIHyperCubeClientCore->tcpSend((char*)pdata, dataLen);
 }
 
-bool HyperCubeClientCore::SendActivity::onConnect(void)
+bool HKClientCore::SendActivity::onConnect(void)
 {
     std::lock_guard<std::mutex> lock(writePacketBuilderLock);
     writePacketBuilder.init();
@@ -256,7 +256,7 @@ bool HyperCubeClientCore::SendActivity::onConnect(void)
     return true;
 }
 
-bool HyperCubeClientCore::SendActivity::onDisconnect(void)
+bool HKClientCore::SendActivity::onDisconnect(void)
 {
     std::lock_guard<std::mutex> lock(writePacketBuilderLock);
     writePacketBuilder.deinit();
@@ -267,7 +267,7 @@ bool HyperCubeClientCore::SendActivity::onDisconnect(void)
 
 // ------------------------------------------------------------------------------------------------
 
-HyperCubeClientCore::SignallingObject::SignallingObject(IHyperCubeClientCore* _pIHyperCubeClientCore) :
+HKClientCore::SignallingObject::SignallingObject(IHKClientCore* _pIHyperCubeClientCore) :
     pIHyperCubeClientCore{ _pIHyperCubeClientCore }, connectionId{0},
     CstdThread(this)
 {
@@ -275,7 +275,7 @@ HyperCubeClientCore::SignallingObject::SignallingObject(IHyperCubeClientCore* _p
     connectionId = std::rand();
 };
 
-bool HyperCubeClientCore::SignallingObject::Server::updateDnsAddress(std::string _serverName)
+bool HKClientCore::SignallingObject::Server::updateDnsAddress(std::string _serverName)
 {
     if (_serverName.length() > 0) {
         name = _serverName;
@@ -286,13 +286,13 @@ bool HyperCubeClientCore::SignallingObject::Server::updateDnsAddress(std::string
     return false;
 }
 
-bool HyperCubeClientCore::SignallingObject::Server::init(IHyperCubeClientCore* _pIHyperCubeClientCore, std::string _serverName)
+bool HKClientCore::SignallingObject::Server::init(IHKClientCore* _pIHyperCubeClientCore, std::string _serverName)
 {
     pIHyperCubeClientCore = _pIHyperCubeClientCore;
     return updateDnsAddress(_serverName);
 }
 
-bool HyperCubeClientCore::SignallingObject::Servers::init(IHyperCubeClientCore* _pIHyperCubeClientCore, std::string _serverName)
+bool HKClientCore::SignallingObject::Servers::init(IHKClientCore* _pIHyperCubeClientCore, std::string _serverName)
 {
     bool stat = false;
     servers[WORKING].init(_pIHyperCubeClientCore, _serverName);
@@ -301,7 +301,7 @@ bool HyperCubeClientCore::SignallingObject::Servers::init(IHyperCubeClientCore* 
     return stat;
 }
 
-HyperCubeClientCore::SignallingObject::Server& HyperCubeClientCore::SignallingObject::Servers::getActiveServer(void)
+HKClientCore::SignallingObject::Server& HKClientCore::SignallingObject::Servers::getActiveServer(void)
 {
     // This will drop down to the PRIMARY if dns addreses update fails
     do {
@@ -314,7 +314,7 @@ HyperCubeClientCore::SignallingObject::Server& HyperCubeClientCore::SignallingOb
     return activeServer;
 }
 
-HyperCubeClientCore::SignallingObject::Server& HyperCubeClientCore::SignallingObject::Servers::getNextActiveServer(void)
+HKClientCore::SignallingObject::Server& HKClientCore::SignallingObject::Servers::getNextActiveServer(void)
 {
     switch (index) {
     case WORKING:
@@ -334,7 +334,7 @@ HyperCubeClientCore::SignallingObject::Server& HyperCubeClientCore::SignallingOb
     return getActiveServer();
 }
 
-void HyperCubeClientCore::SignallingObject::init(std::string _serverName)
+void HKClientCore::SignallingObject::init(std::string _serverName)
 {
     // lookup all addresses
     bool stat = false;
@@ -347,7 +347,7 @@ void HyperCubeClientCore::SignallingObject::init(std::string _serverName)
     }
 }
 
-void HyperCubeClientCore::SignallingObject::deinit(void)
+void HKClientCore::SignallingObject::deinit(void)
 {
     if (isStarted()) {
         while (!isExited()) {
@@ -358,9 +358,9 @@ void HyperCubeClientCore::SignallingObject::deinit(void)
     CstdThread::deinit(true);
 }
 
-bool HyperCubeClientCore::SignallingObject::threadFunction(void)
+bool HKClientCore::SignallingObject::threadFunction(void)
 {
-    LOG_INFO("HyperCubeClientCore::threadFunction()", "ThreadStarted", 0);
+    LOG_INFO("HKClientCore::threadFunction()", "ThreadStarted", 0);
     while (!checkIfShouldExit()) {
         connectIfNotConnected();
         eventDisconnectedFromServer.waitUntil(HYPERCUBE_CONNECTIONINTERVAL_MS);
@@ -369,7 +369,7 @@ bool HyperCubeClientCore::SignallingObject::threadFunction(void)
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::connectIfNotConnected(void)
+bool HKClientCore::SignallingObject::connectIfNotConnected(void)
 {
     bool stat = true;
     if (!socketValid()) {
@@ -379,7 +379,7 @@ bool HyperCubeClientCore::SignallingObject::connectIfNotConnected(void)
             Sleep(2000);
             justDisconnected = false;
         }
-        LOG_STATESTRING("HyperCubeClientCore-ServerIP", servers.getActiveServerAddress());
+        LOG_STATESTRING("HKClientCore-ServerIP", servers.getActiveServerAddress());
         stat = connect();
         if (stat) {
             pIHyperCubeClientCore->onConnect();
@@ -395,7 +395,7 @@ bool HyperCubeClientCore::SignallingObject::connectIfNotConnected(void)
     // if local ping ack took too long, then shutdown connection and try again
     if (localPingAckTimer.isElapsed(HYPERCUBE_LOCALPINGACKTIME)) {
         uint64_t elapsedTime = localPingAckTimer.elapsed() / 1000000000;
-        LOG_WARNING("HyperCubeClientCore::SignallingObject::connectIfNotConnected()", "local ping elapsed time expired closing Data and socket", (int)elapsedTime);
+        LOG_WARNING("HKClientCore::SignallingObject::connectIfNotConnected()", "local ping elapsed time expired closing Data and socket", (int)elapsedTime);
         pIHyperCubeClientCore->onDisconnect();
     }
 
@@ -405,7 +405,7 @@ bool HyperCubeClientCore::SignallingObject::connectIfNotConnected(void)
     return stat;
 }
 
-bool HyperCubeClientCore::SignallingObject::isSignallingMsg(std::unique_ptr<Packet>& rppacket)
+bool HKClientCore::SignallingObject::isSignallingMsg(std::unique_ptr<Packet>& rppacket)
 {
     bool sigMsg = false;
     Msg msg;
@@ -429,70 +429,70 @@ bool HyperCubeClientCore::SignallingObject::isSignallingMsg(std::unique_ptr<Pack
     return sigMsg;
 }
 
-bool HyperCubeClientCore::SignallingObject::onConnectionInfoAck(HyperCubeCommand& hyperCubeCommand)
+bool HKClientCore::SignallingObject::onConnectionInfoAck(HyperCubeCommand& hyperCubeCommand)
 {
     ConnectionInfoAck connectionInfoAck;
     connectionInfoAck.from_json(hyperCubeCommand.getJsonData());
     std::string jsonDataString = connectionInfoAck.to_json().dump();
     if (hyperCubeCommand.status) {
-        LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onConnectionInfoAck, status:success", 0);
+        LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "onConnectionInfoAck, status:success", 0);
     }
     else {
-        LOG_WARNING("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onConnectionInfoAckstatus:Failed - Duplicate name? " + jsonDataString, 0);
+        LOG_WARNING("HKClientCore::SignallingObject::processSigMsgJson()", "onConnectionInfoAckstatus:Failed - Duplicate name? " + jsonDataString, 0);
     }
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onCreateGroupAck(HyperCubeCommand& hyperCubeCommand)
+bool HKClientCore::SignallingObject::onCreateGroupAck(HyperCubeCommand& hyperCubeCommand)
 {
     GroupInfo groupInfo;
     groupInfo.from_json(hyperCubeCommand.getJsonData());
     std::string jsonDataString = groupInfo.to_json().dump();
     if (hyperCubeCommand.status) {
-        LOG_INFO("HyperCubeClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck, status:success", 0);
+        LOG_INFO("HKClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck, status:success", 0);
     }
     else {
-        LOG_NOTE("HyperCubeClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck status:Failed - Duplicate name? " + jsonDataString, 0);
+        LOG_NOTE("HKClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck status:Failed - Duplicate name? " + jsonDataString, 0);
     }
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onRemotePing(HyperCubeCommand& hyperCubeCommand)
+bool HKClientCore::SignallingObject::onRemotePing(HyperCubeCommand& hyperCubeCommand)
 {
     std::string pingData = hyperCubeCommand.getJsonData().dump();
     if (hyperCubeCommand.ack) {
-        LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onRemotePing ack", 0);
+        LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "onRemotePing ack", 0);
     } else {
-        LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onRemotePing command", 0);
+        LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "onRemotePing command", 0);
         remotePing(true, pingData);
     }
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onLocalPing(HyperCubeCommand& hyperCubeCommand)
+bool HKClientCore::SignallingObject::onLocalPing(HyperCubeCommand& hyperCubeCommand)
 {
     localPingAckTimer.stop();
-    LOG_STATEINT("HyperCubeClientCore-pings", ++numLocalPingAcks);
+    LOG_STATEINT("HKClientCore-pings", ++numLocalPingAcks);
     // std::string pingData = hyperCubeCommand.getJsonData().dump();
-    // LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onLocalPing ack", 0);
+    // LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "onLocalPing ack", 0);
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onEchoData(HyperCubeCommand& hyperCubeCommand)
+bool HKClientCore::SignallingObject::onEchoData(HyperCubeCommand& hyperCubeCommand)
 {
     std::string data = hyperCubeCommand.getJsonData().dump();
     bool status = echoData(data);
     std::string jsonDataString = hyperCubeCommand.getJsonData().dump();
     if (status) {
-        LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onEchoData, success", 0);
+        LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "onEchoData, success", 0);
     }
     else {
-        LOG_WARNING("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "onEchoDat Failed" + jsonDataString, 0);
+        LOG_WARNING("HKClientCore::SignallingObject::processSigMsgJson()", "onEchoDat Failed" + jsonDataString, 0);
     }
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::processSigMsgJson(const Packet* ppacket)
+bool HKClientCore::SignallingObject::processSigMsgJson(const Packet* ppacket)
 {
     MsgJson msgJson;
     json jsonData;
@@ -501,7 +501,7 @@ bool HyperCubeClientCore::SignallingObject::processSigMsgJson(const Packet* ppac
 
     try {
         std::string logLineData = msgJson.jsonData;
-        //        LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received " + line, 0);
+        //        LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received " + line, 0);
         HyperCubeCommand hyperCubeCommand(HYPERCUBECOMMANDS::NONE, NULL, true);
         hyperCubeCommand.from_json(jsonData);
 
@@ -513,25 +513,25 @@ bool HyperCubeClientCore::SignallingObject::processSigMsgJson(const Packet* ppac
                 msgProcessed = onCreateGroupAck(hyperCubeCommand);
                 break;
             case HYPERCUBECOMMANDS::SUBSCRIBEACK:
-                LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received subscribeAck" + logLineData, 0);
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received subscribeAck" + logLineData, 0);
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::UNSUBSCRIBEACK:
-                LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received unsubscribeAck" + logLineData, 0);
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received unsubscribeAck" + logLineData, 0);
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::SUBSCRIBER:
-                LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received subscriber" + logLineData, 0);
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received subscriber" + logLineData, 0);
                 onOpenForData();
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::UNSUBSCRIBER:
-                LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received unsubscriber" + logLineData, 0);
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received unsubscriber" + logLineData, 0);
                 onClosedForData();
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::CLOSEDFORDATA:
-                LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received onClosedForData" + logLineData, 0);
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received onClosedForData" + logLineData, 0);
                 onClosedForData();
                 msgProcessed = true;
                 break;
@@ -542,7 +542,7 @@ bool HyperCubeClientCore::SignallingObject::processSigMsgJson(const Packet* ppac
                 msgProcessed = onRemotePing(hyperCubeCommand);
                 break;
             case HYPERCUBECOMMANDS::LOCALPING:
-                // LOG_INFO("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "received LocalPing" + logLineData, 0);
+                // LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received LocalPing" + logLineData, 0);
                 msgProcessed = onLocalPing(hyperCubeCommand);;
                 break;
             default:
@@ -550,12 +550,12 @@ bool HyperCubeClientCore::SignallingObject::processSigMsgJson(const Packet* ppac
         }
     }
     catch (...) {
-        LOG_WARNING("HyperCubeClientCore::SignallingObject::processSigMsgJson()", "Failed to decode json", 0);
+        LOG_WARNING("HKClientCore::SignallingObject::processSigMsgJson()", "Failed to decode json", 0);
     }
     return msgProcessed;
 }
 
-bool HyperCubeClientCore::SignallingObject::connect(void)
+bool HKClientCore::SignallingObject::connect(void)
 {
     bool stat = false;
     Server activeServer = servers.getActiveServer();
@@ -563,31 +563,31 @@ bool HyperCubeClientCore::SignallingObject::connect(void)
     stat = pIHyperCubeClientCore->tcpConnect(activeServer.name, activeServer.port);
 
     if (stat) {
-         LOG_INFO("HyperCubeClientCore::connect()", "connected to " + servers.getActiveServerAddress(), 0);
+         LOG_INFO("HKClientCore::connect()", "connected to " + servers.getActiveServerAddress(), 0);
          warnedOfFailedConnectionAttempts = 0;
-         LOG_STATEINT("HyperCubeClientCore-NumSuccessfullConnectionAttempts", ++numSuccessfullConnectionAttempts);
+         LOG_STATEINT("HKClientCore-NumSuccessfullConnectionAttempts", ++numSuccessfullConnectionAttempts);
 
     } else {
-        LOG_STATESTRING("HyperCubeClientCore-state", "disconnected");
-        LOG_STATEINT("HyperCubeClientCore-NumFailedConnectionAttempts", ++numFailedConnectionAttempts);
+        LOG_STATESTRING("HKClientCore-state", "disconnected");
+        LOG_STATEINT("HKClientCore-NumFailedConnectionAttempts", ++numFailedConnectionAttempts);
         if (warnedOfFailedConnectionAttempts++ < 6) {
-            LOG_WARNING("HyperCubeClientCore::connect()", "connection failed to " + servers.getActiveServerAddress(), 0);
+            LOG_WARNING("HKClientCore::connect()", "connection failed to " + servers.getActiveServerAddress(), 0);
         }
         servers.getNextActiveServer();
     }
     return stat;
 }
 
-bool HyperCubeClientCore::SignallingObject::onConnect(void)
+bool HKClientCore::SignallingObject::onConnect(void)
 {
-    LOG_STATESTRING("HyperCubeClientCore-state", "connected");
+    LOG_STATESTRING("HKClientCore-state", "connected");
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onDisconnect(void)
+bool HKClientCore::SignallingObject::onDisconnect(void)
 {
     if (connected) {
-        LOG_STATESTRING("HyperCubeClientCore-state", "disconnected");
+        LOG_STATESTRING("HKClientCore-state", "disconnected");
         connected = false;
         justDisconnected = true;
         eventDisconnectedFromServer.notify();
@@ -595,97 +595,97 @@ bool HyperCubeClientCore::SignallingObject::onDisconnect(void)
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onOpenForData(void)
+bool HKClientCore::SignallingObject::onOpenForData(void)
 {
-    LOG_STATESTRING("HyperCubeClientCore-state", "openForData");
+    LOG_STATESTRING("HKClientCore-state", "openForData");
     pIHyperCubeClientCore->onOpenForData();
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::onClosedForData(void)
+bool HKClientCore::SignallingObject::onClosedForData(void)
 {
-    LOG_STATESTRING("HyperCubeClientCore-state", "closedForData");
+    LOG_STATESTRING("HKClientCore-state", "closedForData");
     pIHyperCubeClientCore->onClosedForData();
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::setupConnection(void)
+bool HKClientCore::SignallingObject::setupConnection(void)
 {
     //sendEcho();
     sendConnectionInfo("Matrix");
     createDefaultGroup();
     localPing();
-    LOG_INFO("HyperCubeClientCore::SignallingObject::setupConnection()", "done setup", 0);
+    LOG_INFO("HKClientCore::SignallingObject::setupConnection()", "done setup", 0);
     return true;
 }
 
-bool HyperCubeClientCore::SignallingObject::echoData(std::string echoData)
+bool HKClientCore::SignallingObject::echoData(std::string echoData)
 {
-    LOG_INFO("HyperCubeClientCore::echoData()", "", 0);
+    LOG_INFO("HKClientCore::echoData()", "", 0);
     if (echoData.length() == 0) echoData = "echoDataData";
     StringInfo stringInfo;
     stringInfo.data = echoData;
     return sendCmdOut(HYPERCUBECOMMANDS::ECHODATA, stringInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::localPing(bool ack, std::string data)
+bool HKClientCore::SignallingObject::localPing(bool ack, std::string data)
 {
     localPingAckTimer.start();
-    // LOG_INFO("HyperCubeClientCore::localPing()", "", 0);
+    // LOG_INFO("HKClientCore::localPing()", "", 0);
     StringInfo stringInfo;
     stringInfo.data = data;
     return sendCmdOut(HYPERCUBECOMMANDS::LOCALPING, stringInfo, ack);
 }
 
-bool HyperCubeClientCore::SignallingObject::remotePing(bool ack, std::string data)
+bool HKClientCore::SignallingObject::remotePing(bool ack, std::string data)
 {
-    LOG_INFO("HyperCubeClientCore::remotePing()", "", 0);
+    LOG_INFO("HKClientCore::remotePing()", "", 0);
     StringInfo stringInfo;
     stringInfo.data = data;
     return sendCmdOut(HYPERCUBECOMMANDS::REMOTEPING, stringInfo, ack);
 }
 
 
-bool HyperCubeClientCore::SignallingObject::publish(void)
+bool HKClientCore::SignallingObject::publish(void)
 {
-    LOG_INFO("HyperCubeClientCore::publish()", "", 0);
+    LOG_INFO("HKClientCore::publish()", "", 0);
     PublishInfo publishInfo;
     publishInfo.publishData = "publish data!";
     return sendCmdOut(HYPERCUBECOMMANDS::PUBLISHINFO, publishInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::sendConnectionInfo(std::string _connectionName)
+bool HKClientCore::SignallingObject::sendConnectionInfo(std::string _connectionName)
 {
-    LOG_INFO("HyperCubeClientCore::sendConnectionInfo()", "", 0);
+    LOG_INFO("HKClientCore::sendConnectionInfo()", "", 0);
     connectionInfo.serverIpAddress = servers.getActiveServerInfo().address;
     return sendCmdOut(HYPERCUBECOMMANDS::CONNECTIONINFO, connectionInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::createGroup(std::string _groupName)
+bool HKClientCore::SignallingObject::createGroup(std::string _groupName)
 {
-    LOG_INFO("HyperCubeClientCore::createGroup()", "", 0);
+    LOG_INFO("HKClientCore::createGroup()", "", 0);
     GroupInfo groupInfo;
     groupInfo.groupName = _groupName;
     groupInfo.creatorConnectionInfo = connectionInfo;
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::createGroup(const GroupInfo& _rgroupInfo)
+bool HKClientCore::SignallingObject::createGroup(const GroupInfo& _rgroupInfo)
 {
-    LOG_INFO("HyperCubeClientCore::createGroup()", "", 0);
+    LOG_INFO("HKClientCore::createGroup()", "", 0);
     GroupInfo groupInfo = _rgroupInfo;
     groupInfo.creatorConnectionInfo = connectionInfo;
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::createDefaultGroup(void)
+bool HKClientCore::SignallingObject::createDefaultGroup(void)
 {
-    LOG_INFO("HyperCubeClientCore::createDefaultGroup()", "", 0);
+    LOG_INFO("HKClientCore::createDefaultGroup()", "", 0);
     defaultGroupInfo.creatorConnectionInfo = connectionInfo;
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, defaultGroupInfo);
 }
 
-bool HyperCubeClientCore::SignallingObject::subscribe(std::string _groupName)
+bool HKClientCore::SignallingObject::subscribe(std::string _groupName)
 {
     string command;
     uint64_t _groupId = 1;
@@ -697,47 +697,47 @@ bool HyperCubeClientCore::SignallingObject::subscribe(std::string _groupName)
 
     command = j.dump();
     SigMsg signallingMsg(command);
-    LOG_INFO("HyperCubeClientCore::subscribe()", "", 0);
+    LOG_INFO("HKClientCore::subscribe()", "", 0);
     return sendMsgOut(signallingMsg);
 }
 
 // ------------------------------------------------------------------------------------------------
 
-HyperCubeClientCore::HyperCubeClientCore() :
-    IHyperCubeClientCore{ client },
+HKClientCore::HKClientCore() :
+    IHKClientCore{ client },
     signallingObject{ this },
     receiveActivity{ this, signallingObject },
     sendActivity{ this }
 {
 };
 
-HyperCubeClientCore::~HyperCubeClientCore() {
+HKClientCore::~HKClientCore() {
 
 };
 
-bool HyperCubeClientCore::init(std::string _serverName, bool reInit)
+bool HKClientCore::init(std::string _serverName, bool reInit)
 {
-    LOG_INFO("Starting HyperCubeClientCore", "", 0);
-    LOG_INFO("HyperCubeClientCore::init()", _serverName, 0);
+    LOG_INFO("Starting HKClientCore", "", 0);
+    LOG_INFO("HKClientCore::init()", _serverName, 0);
     receiveActivity.init();
     sendActivity.init();
     signallingObject.init(_serverName);
     return true;
 }
 
-bool HyperCubeClientCore::deinit(void)
+bool HKClientCore::deinit(void)
 {
     signallingObject.deinit();
     client.close();
     receiveActivity.deinit();
     sendActivity.deinit();
-    LOG_INFO("HyperCubeClientCore::deinit()", "", 0);
+    LOG_INFO("HKClientCore::deinit()", "", 0);
     return true;
 };
 
 
 /*
-bool HyperCubeClientCore::sendOut(Packet::UniquePtr& ppacket)
+bool HKClientCore::sendOut(Packet::UniquePtr& ppacket)
 {
     Packet* packet = ppacket.get();
 
@@ -755,20 +755,20 @@ bool HyperCubeClientCore::sendOut(Packet::UniquePtr& ppacket)
 }
 */
 
-bool HyperCubeClientCore::onConnect(void)
+bool HKClientCore::onConnect(void)
 {
     std::string line = "connected on socket# " + std::to_string(client.getSocket());
-    LOG_INFO("HyperCubeClientCore::onConnect()", line, 0);
+    LOG_INFO("HKClientCore::onConnect()", line, 0);
     signallingObject.onConnect();
     receiveActivity.onConnect();
     sendActivity.onConnect();
     return true;
 }
 
-bool HyperCubeClientCore::onDisconnect(void)
+bool HKClientCore::onDisconnect(void)
 {
     std::string line = "disconnect on socket# " + std::to_string(client.getSocket());
-    LOG_WARNING("HyperCubeClientCore::onDisconnect()", line, 0);
+    LOG_WARNING("HKClientCore::onDisconnect()", line, 0);
     client.close();
     signallingObject.onDisconnect();
     receiveActivity.onDisconnect();
@@ -777,39 +777,39 @@ bool HyperCubeClientCore::onDisconnect(void)
     return true;
 }
 
-bool HyperCubeClientCore::onOpenForData(void)
+bool HKClientCore::onOpenForData(void)
 {
     return true;
 }
 
-bool HyperCubeClientCore::onClosedForData(void)
+bool HKClientCore::onClosedForData(void)
 {
     return true;
 }
 
-bool HyperCubeClientCore::isSignallingMsg(std::unique_ptr<Packet>& rppacket)
+bool HKClientCore::isSignallingMsg(std::unique_ptr<Packet>& rppacket)
 {
     return signallingObject.isSignallingMsg(rppacket);
 }
 
-bool HyperCubeClientCore::onReceivedData(void)
+bool HKClientCore::onReceivedData(void)
 {
-    LOG_STATEINT("HyperCubeClientCore-numInputMsgs", ++numInputMsgs);
+    LOG_STATEINT("HKClientCore-numInputMsgs", ++numInputMsgs);
     return true;
 }
 
 
-bool HyperCubeClientCore::sendMsgOut(Msg& msg) {
+bool HKClientCore::sendMsgOut(Msg& msg) {
     Packet::UniquePtr ppacket = 0;
     ppacket = Packet::create();
     mserdes.msgToPacket(msg, ppacket);
     bool stat = sendActivity.sendOut(ppacket);
-    LOG_STATEINT("HyperCubeClientCore-numOutputMsgs", ++numOutputMsgs);
+    LOG_STATEINT("HKClientCore-numOutputMsgs", ++numOutputMsgs);
     return stat;
 }
 
 /*
-bool HyperCubeClientCore::peekMsg(Msg& msg) {
+bool HKClientCore::peekMsg(Msg& msg) {
     if (inPacketQ.size()<=0) return false;
     mserdes.packetToMsg(inPacketQ.front().get(), msg);
     return true;
@@ -817,7 +817,7 @@ bool HyperCubeClientCore::peekMsg(Msg& msg) {
 */
 
 /*
-bool HyperCubeClientCore::recvMsg(Msg& msg) {
+bool HKClientCore::recvMsg(Msg& msg) {
     Packet::UniquePtr ppacket = 0;
     bool stat = receiveActivity.receiveIn(ppacket);
     if (stat) {
@@ -826,7 +826,7 @@ bool HyperCubeClientCore::recvMsg(Msg& msg) {
     return stat;
 }
 */
-bool HyperCubeClientCore::getPacket(Packet& packet)
+bool HKClientCore::getPacket(Packet& packet)
 {
     Packet::UniquePtr ppacket = 0;
     bool stat = receiveActivity.receiveIn(ppacket);
@@ -835,7 +835,7 @@ bool HyperCubeClientCore::getPacket(Packet& packet)
 }
 
 /*
-bool HyperCubeClientCore::printRcvdMsgCmds(std::string sentString) {
+bool HKClientCore::printRcvdMsgCmds(std::string sentString) {
     bool stat = false;
     while (!PacketQ.isEmpty()) {
         MsgCmd msgCmd("");
@@ -852,7 +852,7 @@ bool HyperCubeClientCore::printRcvdMsgCmds(std::string sentString) {
 }
 
 
-bool HyperCubeClientCore::processInputMsgs(std::string sentString) {
+bool HKClientCore::processInputMsgs(std::string sentString) {
     bool stat = false;
     while (inPacketQ.size()>0) {
         MsgCmd msgCmd("");
@@ -895,7 +895,7 @@ bool HyperCubeClientCore::processInputMsgs(std::string sentString) {
 */
 
 /*
-bool HyperCubeClientCore::processConnectionEvents(void)
+bool HKClientCore::processConnectionEvents(void)
 {
     struct pollfd pollFds[1];
     memset(pollFds, 0, sizeof(pollfd));
@@ -914,7 +914,7 @@ bool HyperCubeClientCore::processConnectionEvents(void)
     /// come around again with the new socket added in pollFds.
     int res = poll(pollFds, numFds, 1000);
     if (res < 0) {
-        LOG_WARNING("HyperCubeClientCore::processConnectionEvents()", "poll returned - 1", res);
+        LOG_WARNING("HKClientCore::processConnectionEvents()", "poll returned - 1", res);
         return false;
     }
     if ((pollFds[0].fd > 0) && (pollFds[0].revents != 0)) { // if not being ignored
@@ -927,11 +927,11 @@ bool HyperCubeClientCore::processConnectionEvents(void)
             writePackets();
         }
         if (revents & POLLPRI) {
-            LOG_INFO("HyperCubeClientCore::processConnectionEvents(), poll returned POLLPRI", pollFds[0].revents);
+            LOG_INFO("HKClientCore::processConnectionEvents(), poll returned POLLPRI", pollFds[0].revents);
         }
         if ((revents & POLLHUP) || (revents & POLLERR) || (revents & POLLNVAL)) {
             connectionClosed();
-            LOG_INFO("HyperCubeClientCore::processConnectionEvents(), TCP connection close", (int)pollFds[0].fd);
+            LOG_INFO("HKClientCore::processConnectionEvents(), TCP connection close", (int)pollFds[0].fd);
         }
     }
     return true;
@@ -940,12 +940,12 @@ bool HyperCubeClientCore::processConnectionEvents(void)
 
 
 /*
-bool HyperCubeClient::doShell(void)
+bool HKClient::doShell(void)
 {
     client.init();
 
     if (!client.connect(serverIpAddress, SERVER_PORT)) {
-        std::cout << "HyperCubeClient(): Server not available\n\r";
+        std::cout << "HKClient(): Server not available\n\r";
         return false;
     }
     bool exitNow = false;
@@ -1028,11 +1028,11 @@ bool HyperCubeClient::doShell(void)
 
 // ------------------------------------------------------------
 
-HyperCubeClient::HyperCubeClient() :
-    HyperCubeClientCore{}
+HKClient::HKClient() :
+    HKClientCore{}
 {
 }
 
-HyperCubeClient::~HyperCubeClient()
+HKClient::~HKClient()
 {
 }

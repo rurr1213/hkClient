@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <atomic>
 
-#include "backChannelClient.h"
+#include "hkClient.h"
 #include "Logger.h"
 
 #define BACKCHANNEL_INITIAL_SERVER_NAME "primary.hyperkube.net"
@@ -73,7 +73,7 @@ public:
 	virtual bool onClosedForData(void) = 0;
 };
 
-class BackChannelDevice : public BackChannelClient
+class BackChannelDevice : public HKClient
 {
 	Stream stream;
 	SessionInfo& rreferenceInfo;
