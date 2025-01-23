@@ -9,7 +9,7 @@
 # Find required libraries (replace with your actual find_package commands)
 find_package(Threads REQUIRED)
 
-set(TARGET_NAME backChannelClientApp)
+set(TARGET_NAME hkClient)
 
 # Example: If using a library installed with CMake
 # find_package(nlohmann_json REQUIRED)
