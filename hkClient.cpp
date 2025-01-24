@@ -687,18 +687,10 @@ bool HKClientCore::SignallingObject::createDefaultGroup(void)
 
 bool HKClientCore::SignallingObject::subscribe(std::string _groupName)
 {
-    string command;
-    uint64_t _groupId = 1;
-
-    json j = {
-        { "command", "subscribe" },
-        { "groupName", _groupName }
-    };
-
-    command = j.dump();
-    SigMsg signallingMsg(command);
     LOG_INFO("HKClientCore::subscribe()", "", 0);
-    return sendMsgOut(signallingMsg);
+    SubscriberInfo subscriberInfo;
+    subscriberInfo.groupName = _groupName;
+    return sendCmdOut(HYPERCUBECOMMANDS::SUBSCRIBE, subscriberInfo);
 }
 
 // ------------------------------------------------------------------------------------------------
