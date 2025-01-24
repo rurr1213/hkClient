@@ -1,8 +1,4 @@
 #include <stdio.h>
-//#include "EConnection.h"
-//#include "ThreadMgr.h"
-//#include "tcp.h"
-//#include "TcpStringClientServer.h"
 #include <iostream>
 #include "hkClient.h"
 #include "kbhit.h"
@@ -104,14 +100,6 @@ bool HyperCubeClientShell::doShell(void)
             break;
             case 'e':
                 sendEcho();
-                //                    doEchoTest();
-                                    /*
-                                    {
-                                        cout << "Sent ";
-                                        string command = "ECHO"; command += dataString + std::to_string(msgNum++);
-                                        MsgCmd cmdMsg(command);
-                                        sendMsg(cmdMsg);
-                                    }*/
                 break;
             case 'x':
             {
@@ -134,11 +122,6 @@ bool HyperCubeClientShell::doShell(void)
             }
 
         }
-
-        // recvPackets();
-
-        // printRcvdMsgCmds("");
-
         usleep(10000);
     }
     return true;
