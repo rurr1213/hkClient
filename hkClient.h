@@ -29,7 +29,8 @@ public:
         rtcpClient{ _rtcpClient } {};
 
 //    virtual bool tcpClose(void) { return rtcpClient.close(); }
-    virtual bool tcpConnect(std::string addrString, int port) { return rtcpClient.connect(addrString, port); }
+    bool isIPAddress(const std::string& serverName);
+    virtual bool tcpConnect(std::string addrString, int port);
     virtual bool tcpSocketValid(void) { return rtcpClient.socketValid(); }
     virtual bool tcpDnsLookup(std::string _hostName, std::string& _ipAddress) { return rtcpClient.dnsLookup(_hostName, _ipAddress); }
     virtual int tcpGetSocket(void) { return (int)rtcpClient.getSocket(); }

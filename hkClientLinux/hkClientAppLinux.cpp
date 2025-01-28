@@ -133,8 +133,7 @@ int main() {
 	printf("BackChannel Client\n");
 	printf("------------------\n");
 
-//    string ipAddress = "127.0.0.1";
-    string ipAddress = "172.31.28.82";
+    string ipAddress = "primary.hyperkube.net";
 
     cout << "Connecting to " << ipAddress << endl;
     hyperCubeClientShell.init(ipAddress);

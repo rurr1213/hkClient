@@ -15,6 +15,7 @@
 #include "kbhit.h"
 #include "clockGetTime.h"
 #include "MsgExt.h"
+#include <regex>
 
 using namespace std;
 
@@ -746,6 +747,25 @@ bool HKClientCore::sendOut(Packet::UniquePtr& ppacket)
     return allSent;
 }
 */
+
+bool IHKClientCore::isIPAddress(const std::string& serverName) {
+    // Regular expression for matching an IP address
+    const std::regex ipPattern(
+        R"(^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$)"
+    );
+    return std::regex_match(serverName, ipPattern);
+}
+
+bool IHKClientCore::tcpConnect(std::string addrString, int port)
+{
+    std::string ipAddr;
+    if (isIPAddress(addrString))
+        ipAddr = addrString;
+    else
+        tcpDnsLookup(addrString, ipAddr);
+     return rtcpClient.connect(ipAddr, port);
+}
+
 
 bool HKClientCore::onConnect(void)
 {
