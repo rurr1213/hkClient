@@ -255,6 +255,7 @@ protected:
 public:
     HKClient();
     ~HKClient();
+    bool init(std::string serverName = HYPERCUBE_SERVER_NAME_PRIMARY, bool reInit = true) { return HKClientCore::init(serverName, reInit); }
     bool subscribe(std::string _groupName) { return signallingObject.subscribe(_groupName);}
     bool publish(void) { return signallingObject.publish();}
     bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}
