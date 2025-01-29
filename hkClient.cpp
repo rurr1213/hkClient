@@ -613,7 +613,7 @@ bool HKClientCore::SignallingObject::onClosedForData(void)
 bool HKClientCore::SignallingObject::setupConnection(void)
 {
     //sendEcho();
-    sendConnectionInfo("Matrix");
+    sendConnectionInfo("Client");
     createDefaultGroup();
     localPing();
     LOG_INFO("HKClientCore::SignallingObject::setupConnection()", "done setup", 0);
@@ -631,8 +631,8 @@ bool HKClientCore::SignallingObject::echoData(std::string echoData)
 
 bool HKClientCore::SignallingObject::localPing(bool ack, std::string data)
 {
+    /* The following timer is critical for determing if the connection is active*/
     localPingAckTimer.start();
-    // LOG_INFO("HKClientCore::localPing()", "", 0);
     StringInfo stringInfo;
     stringInfo.data = data;
     return sendCmdOut(HYPERCUBECOMMANDS::LOCALPING, stringInfo, ack);
@@ -683,6 +683,7 @@ bool HKClientCore::SignallingObject::createDefaultGroup(void)
 {
     LOG_INFO("HKClientCore::createDefaultGroup()", "", 0);
     defaultGroupInfo.creatorConnectionInfo = connectionInfo;
+    defaultGroupInfo.groupName = connectionInfo.connectionName;
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, defaultGroupInfo);
 }
 

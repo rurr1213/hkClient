@@ -175,8 +175,6 @@ class HKClientCore : IHKClientCore
             }
             bool sendConnectionInfo(std::string _connectionName);
             bool createDefaultGroup(void);
-            bool localPing(bool ack = false, std::string data = "localPingFromMatrix");
-            bool remotePing(bool ack = false, std::string data = "remotePingFromMatrix");
             bool setupConnection(void);
 
             bool onCreateGroupAck(HyperCubeCommand& hyperCubeCommand);
@@ -206,6 +204,8 @@ class HKClientCore : IHKClientCore
             bool createGroup(const std::string _groupName);
             bool echoData(std::string data = "");
             bool isConnected(void) { return connected; }
+            bool localPing(bool ack = false, std::string data = "localPingFromClient");
+            bool remotePing(bool ack = false, std::string data = "remotePingFromClient");
         };
 
         virtual bool onConnect(void);
@@ -263,4 +263,6 @@ public:
     bool sendMsg(Msg& msg) { return sendMsgOut(msg);}
     bool sendEcho(std::string data = "") { return signallingObject.echoData(data); }
     bool isConnected(void) { return signallingObject.isConnected(); }
+    bool localPing(void) { return signallingObject.localPing(); }
+    bool remotePing(void) { return signallingObject.remotePing(); }
 };
