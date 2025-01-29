@@ -258,7 +258,8 @@ public:
     bool init(std::string serverName = HYPERCUBE_SERVER_NAME_PRIMARY, bool reInit = true) { return HKClientCore::init(serverName, reInit); }
     bool subscribe(std::string _groupName) { return signallingObject.subscribe(_groupName);}
     bool publish(void) { return signallingObject.publish();}
-    bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}
+    bool createGroup(const GroupInfo& _groupInfo) { return signallingObject.createGroup(_groupInfo);}
+//    bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}
     bool sendMsg(Msg& msg) { return sendMsgOut(msg);}
     bool sendEcho(std::string data = "") { return signallingObject.echoData(data); }
     bool isConnected(void) { return signallingObject.isConnected(); }

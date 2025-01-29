@@ -88,7 +88,11 @@ bool HyperCubeClientShell::doShell(void)
                 subscribe("groupName");
                 break;
             case 'c':
-                createGroup("Test groupName ");
+                {
+                    GroupInfo groupInfo;
+                    groupInfo.groupName = "groupName";
+                    createGroup(groupInfo);
+                }
                 break;
             case 'r':
             {

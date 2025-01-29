@@ -20,7 +20,20 @@ auto callHKClientFunc(std::unique_ptr<HKClient>& client, Func func, Args&&... ar
     throw std::runtime_error("HKClient is not initialized");
 }
 
-bool HKClientMgrExt::init(void) {
+bool HKClientMgrExt::init(const ClientConnectionInfo _clientConnectionInfo) {
+    clientConnectionInfo = _clientConnectionInfo;
+
+    ConnectionInfo connectionInfo;
+    connectionInfo.connectionName  = _clientConnectionInfo.connectionName;
+    connectionInfo.appUUID         = _clientConnectionInfo.appUUID;
+    connectionInfo.appInstallUUID  = _clientConnectionInfo.appInstallUUID;
+    connectionInfo.systemName      = _clientConnectionInfo.systemName;
+    connectionInfo.clientIpAddress = _clientConnectionInfo.clientIpAddress;
+    connectionInfo.userName        = _clientConnectionInfo.userName;
+    connectionInfo.userUUID        = _clientConnectionInfo.userUUID;
+    connectionInfo.displayName     = _clientConnectionInfo.displayName;
+
+    pHKClient->setConnectionInfo(connectionInfo);
     return callHKClientFunc(pHKClient, &HKClient::init, HYPERCUBE_SERVER_NAME_PRIMARY, true);
 }
 
@@ -36,12 +49,15 @@ bool HKClientMgrExt::publish(void) {
     return callHKClientFunc(pHKClient, &HKClient::publish);
 }
 
-bool HKClientMgrExt::createGroup(const std::string _groupName)
+bool HKClientMgrExt::createGroup(const ClientGroupInfo clientGroupInfo)
 {
-    return callHKClientFunc(pHKClient, &HKClient::createGroup, _groupName);
+    GroupInfo groupInfo;
+    groupInfo.groupName = clientGroupInfo.groupName;
+    return callHKClientFunc(pHKClient, &HKClient::createGroup, groupInfo);
 }
 
 bool HKClientMgrExt::sendEcho(std::string data) {
+    data = clientConnectionInfo.displayName + " " + data;
     return callHKClientFunc(pHKClient, &HKClient::sendEcho, data);
 }
 
