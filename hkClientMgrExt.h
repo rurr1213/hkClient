@@ -39,7 +39,6 @@ class HKClientMgrExt
         bool publish(void);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
-        bool localPing(void);
         bool remotePing(void);
         bool isConnected(void);
         bool sendExit(void);

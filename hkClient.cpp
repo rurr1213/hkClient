@@ -401,7 +401,7 @@ bool HKClientCore::SignallingObject::connectIfNotConnected(void)
     }
 
     // do a periodic ping to server. This will start the localPingAckTimer and the ack will stop it
-    localPing(true, "Connection status ping");
+    if (connected) localPing(true, "Connection status ping");
 
     return stat;
 }
@@ -543,7 +543,7 @@ bool HKClientCore::SignallingObject::processSigMsgJson(const Packet* ppacket)
                 msgProcessed = onRemotePing(hyperCubeCommand);
                 break;
             case HYPERCUBECOMMANDS::LOCALPING:
-                // LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received LocalPing" + logLineData, 0);
+                LOG_DBG("HKClientCore::SignallingObject::processSigMsgJson()", "received LocalPing" + logLineData, 0);
                 msgProcessed = onLocalPing(hyperCubeCommand);;
                 break;
             default:
@@ -635,6 +635,7 @@ bool HKClientCore::SignallingObject::localPing(bool ack, std::string data)
     localPingAckTimer.start();
     StringInfo stringInfo;
     stringInfo.data = data;
+    LOG_DBG("HKClientCore::SignallingObject::processSigMsgJson()", "sending LocalPing", 0);
     return sendCmdOut(HYPERCUBECOMMANDS::LOCALPING, stringInfo, ack);
 }
 
@@ -764,7 +765,9 @@ bool IHKClientCore::tcpConnect(std::string addrString, int port)
         ipAddr = addrString;
     else
         tcpDnsLookup(addrString, ipAddr);
-     return rtcpClient.connect(ipAddr, port);
+
+    int timeOutSecs = 0;
+    return rtcpClient.connect(ipAddr, port, timeOutSecs);
 }
 
 
@@ -792,11 +795,13 @@ bool HKClientCore::onDisconnect(void)
 
 bool HKClientCore::onOpenForData(void)
 {
+    LOG_INFO("HKClientCore::onOpenForData()", "", numInputMsgs);
     return true;
 }
 
 bool HKClientCore::onClosedForData(void)
 {
+    LOG_INFO("HKClientCore::onClosedForData()", "", numInputMsgs);
     return true;
 }
 
@@ -808,6 +813,7 @@ bool HKClientCore::isSignallingMsg(std::unique_ptr<Packet>& rppacket)
 bool HKClientCore::onReceivedData(void)
 {
     LOG_STATEINT("HKClientCore-numInputMsgs", ++numInputMsgs);
+    LOG_DBG("HKClientCore::onReceivedData()", "received data", numInputMsgs);
     return true;
 }
 

@@ -70,10 +70,6 @@ bool HKClientMgrExt::sendCmdMsg(std::string command) {
     return callHKClientFunc(pHKClient, &HKClient::sendMsg, cmdMsg);
 }
 
-bool HKClientMgrExt::localPing(void) {
-    return callHKClientFunc(pHKClient, &HKClient::localPing);
-}
-
 bool HKClientMgrExt::remotePing(void) {
     return callHKClientFunc(pHKClient, &HKClient::remotePing);
 }
