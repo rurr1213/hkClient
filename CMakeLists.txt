@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.10)
 
 project(hkClient)
 
+# the following prefixes all sub projects with this name, so that the
+# sub project libraries are uniquely named, even if they are the same
+# sub modules in other outer projects
+set(ROOT_PROJECT_NAME ${PROJECT_NAME})
+
 # Find required libraries (replace with your actual find_package commands)
 find_package(Threads REQUIRED)
 
@@ -19,7 +24,7 @@ set(EXE_SOURCE_FILES
 add_subdirectory(genCppTools)
 add_subdirectory(CommonCppDartCode)
 
-add_library(hkClientLib STATIC ${LIB_SOURCE_FILES})
+add_library(hkClientLib STATIC ${LIB_SOURCE_FILES} $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}genCppToolsObjects> $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}CommonCppDartCodeObjects>)
 
 # Include directories for the hkClient library
 target_include_directories(hkClientLib PUBLIC
@@ -33,8 +38,6 @@ target_include_directories(hkClientLib PUBLIC
 
 # Link libraries for the hkClient library
 target_link_libraries(hkClientLib
-    genCppTools
-    CommonCppDartCode
     ${CMAKE_THREAD_LIBS_INIT}
 )
 

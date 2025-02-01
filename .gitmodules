@@ -1,6 +1,6 @@
 [submodule "genCppTools"]
 	path = genCppTools
-	url = https://github.com/example/genCppTools.git
+	url = https://github.com/rurr1213/genCppTools.git
 [submodule "CommonCppDartCode"]
 	path = CommonCppDartCode
 	url = https://github.com/rurr1213/CommonCppDartCode.git
