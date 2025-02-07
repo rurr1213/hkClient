@@ -1,14 +1,14 @@
 #include <stdlib.h>
 
-#include "hkClientMgrExt.h"
+#include "hkDeviceMgr.h"
 #include "hkClient.h"
 
-HKClientMgrExt::HKClientMgrExt()
+HKDeviceMgr::HKDeviceMgr()
 {
     pHKClient = std::make_unique<HKClient>();
 }
 
-HKClientMgrExt::~HKClientMgrExt()
+HKDeviceMgr::~HKDeviceMgr()
 {
 }
 
@@ -20,7 +20,7 @@ auto callHKClientFunc(std::unique_ptr<HKClient>& client, Func func, Args&&... ar
     throw std::runtime_error("HKClient is not initialized");
 }
 
-bool HKClientMgrExt::init(const ClientConnectionInfo _clientConnectionInfo) {
+bool HKDeviceMgr::init(const ClientConnectionInfo _clientConnectionInfo) {
     clientConnectionInfo = _clientConnectionInfo;
 
     ConnectionInfo connectionInfo;
@@ -37,39 +37,74 @@ bool HKClientMgrExt::init(const ClientConnectionInfo _clientConnectionInfo) {
     return callHKClientFunc(pHKClient, &HKClient::init, HYPERCUBE_SERVER_NAME_PRIMARY, true);
 }
 
-bool HKClientMgrExt::deinit(void) {
+bool HKDeviceMgr::deinit(void) {
     return callHKClientFunc(pHKClient, &HKClient::deinit);
 }
 
-bool HKClientMgrExt::subscribe(std::string _groupName) {
+bool HKDeviceMgr::subscribe(std::string _groupName) {
     return callHKClientFunc(pHKClient, &HKClient::subscribe, _groupName);
 }
 
-bool HKClientMgrExt::publish(void) {
-    return callHKClientFunc(pHKClient, &HKClient::publish);
+bool HKDeviceMgr::unsubscribe(std::string _groupName) {
+    return callHKClientFunc(pHKClient, &HKClient::unsubscribe, _groupName);
 }
 
-bool HKClientMgrExt::createGroup(const ClientGroupInfo clientGroupInfo)
+bool HKDeviceMgr::publish(std::string _groupName, std::string _data) {
+    return callHKClientFunc(pHKClient, &HKClient::publish, _groupName, _data);
+}
+
+bool HKDeviceMgr::createGroup(const ClientGroupInfo clientGroupInfo)
 {
     GroupInfo groupInfo;
     groupInfo.groupName = clientGroupInfo.groupName;
     return callHKClientFunc(pHKClient, &HKClient::createGroup, groupInfo);
 }
 
-bool HKClientMgrExt::sendEcho(std::string data) {
+bool HKDeviceMgr::sendEcho(std::string data) {
     data = clientConnectionInfo.displayName + " " + data;
     return callHKClientFunc(pHKClient, &HKClient::sendEcho, data);
 }
 
-bool HKClientMgrExt::isConnected(void) {
+bool HKDeviceMgr::isConnected(void) {
     return callHKClientFunc(pHKClient, &HKClient::isConnected);
 }
 
-bool HKClientMgrExt::sendCmdMsg(std::string command) {
+bool HKDeviceMgr::hasReceivedData(void) {
+    return callHKClientFunc(pHKClient, &HKClient::hasReceivedAPacket);
+}
+
+bool HKDeviceMgr::getPacket(Packet& packet) {
+    return callHKClientFunc(pHKClient, &HKClient::getPacket, packet);
+}
+
+bool HKDeviceMgr::sendCmdMsg(std::string command) {
     MsgCmd cmdMsg(command);
     return callHKClientFunc(pHKClient, &HKClient::sendMsg, cmdMsg);
 }
 
-bool HKClientMgrExt::remotePing(void) {
+bool HKDeviceMgr::remotePing(void) {
     return callHKClientFunc(pHKClient, &HKClient::remotePing);
+}
+
+bool HKDeviceMgr::onOpenForDataEvent(void) {
+    return true;
+}
+
+bool HKDeviceMgr::onClosedForDataEvent(void) {
+    return true;
+}
+
+bool HKDeviceMgr::setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder) {
+    pMsgDecoder = std::move(_pmsgDecoder);
+    return true;
+}
+
+bool HKDeviceMgr::processReceivedMsgs(void) {
+    while(callHKClientFunc(pHKClient, &HKClient::hasReceivedAPacket)) {
+        PacketEx packetEx;
+        packetEx.deviceId = DEVICEID::HK;
+        if (getPacket(packetEx.packet)) {
+            pMsgDecoder->onNewPacket(packetEx);
+        }
+    }
 }

@@ -158,6 +158,10 @@ bool HKClientCore::RecvActivity::receiveIn(Packet::UniquePtr& rppacket) {
     return stat;
 }
 
+bool HKClientCore::RecvActivity::isEmpty(void) {
+    return inPacketQ.isEmpty();
+}
+
 // ------------------------------------------------------------------
 
 HKClientCore::SendActivity::SendActivity(IHKClientCore* _pIHyperCubeClientCore) :
@@ -523,17 +527,17 @@ bool HKClientCore::SignallingObject::processSigMsgJson(const Packet* ppacket)
                 break;
             case HYPERCUBECOMMANDS::SUBSCRIBER:
                 LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received subscriber" + logLineData, 0);
-                onOpenForData();
+                onOpenForDataEvent();
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::UNSUBSCRIBER:
                 LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received unsubscriber" + logLineData, 0);
-                onClosedForData();
+                onClosedForDataEvent();
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::CLOSEDFORDATA:
-                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received onClosedForData" + logLineData, 0);
-                onClosedForData();
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received onClosedForDataEvent" + logLineData, 0);
+                onClosedForDataEvent();
                 msgProcessed = true;
                 break;
             case HYPERCUBECOMMANDS::ECHODATA:
@@ -596,17 +600,17 @@ bool HKClientCore::SignallingObject::onDisconnect(void)
     return true;
 }
 
-bool HKClientCore::SignallingObject::onOpenForData(void)
+bool HKClientCore::SignallingObject::onOpenForDataEvent(void)
 {
     LOG_STATESTRING("HKClientCore-state", "openForData");
-    pIHyperCubeClientCore->onOpenForData();
+    pIHyperCubeClientCore->onOpenForDataEvent();
     return true;
 }
 
-bool HKClientCore::SignallingObject::onClosedForData(void)
+bool HKClientCore::SignallingObject::onClosedForDataEvent(void)
 {
     LOG_STATESTRING("HKClientCore-state", "closedForData");
-    pIHyperCubeClientCore->onClosedForData();
+    pIHyperCubeClientCore->onClosedForDataEvent();
     return true;
 }
 
@@ -648,14 +652,6 @@ bool HKClientCore::SignallingObject::remotePing(bool ack, std::string data)
 }
 
 
-bool HKClientCore::SignallingObject::publish(void)
-{
-    LOG_INFO("HKClientCore::publish()", "", 0);
-    PublishInfo publishInfo;
-    publishInfo.publishData = "publish data!";
-    return sendCmdOut(HYPERCUBECOMMANDS::PUBLISHINFO, publishInfo);
-}
-
 bool HKClientCore::SignallingObject::sendConnectionInfo(std::string _connectionName)
 {
     LOG_INFO("HKClientCore::sendConnectionInfo()", "", 0);
@@ -695,6 +691,15 @@ bool HKClientCore::SignallingObject::subscribe(std::string _groupName)
     subscriberInfo.groupName = _groupName;
     return sendCmdOut(HYPERCUBECOMMANDS::SUBSCRIBE, subscriberInfo);
 }
+
+bool HKClientCore::SignallingObject::unsubscribe(std::string _groupName)
+{
+    LOG_INFO("HKClientCore::unsubscribe()", "", 0);
+    SubscriberInfo subscriberInfo;
+    subscriberInfo.groupName = _groupName;
+    return sendCmdOut(HYPERCUBECOMMANDS::UNSUBSCRIBE, subscriberInfo);
+}
+
 
 // ------------------------------------------------------------------------------------------------
 
@@ -789,19 +794,19 @@ bool HKClientCore::onDisconnect(void)
     signallingObject.onDisconnect();
     receiveActivity.onDisconnect();
     sendActivity.onDisconnect();
-    onClosedForData();
+    onClosedForDataEvent();
     return true;
 }
 
-bool HKClientCore::onOpenForData(void)
+bool HKClientCore::onOpenForDataEvent(void)
 {
-    LOG_INFO("HKClientCore::onOpenForData()", "", numInputMsgs);
+    LOG_INFO("HKClientCore::onOpenForDataEvent()", "", numInputMsgs);
     return true;
 }
 
-bool HKClientCore::onClosedForData(void)
+bool HKClientCore::onClosedForDataEvent(void)
 {
-    LOG_INFO("HKClientCore::onClosedForData()", "", numInputMsgs);
+    LOG_INFO("HKClientCore::onClosedForDataEvent()", "", numInputMsgs);
     return true;
 }
 
@@ -845,12 +850,26 @@ bool HKClientCore::recvMsg(Msg& msg) {
     return stat;
 }
 */
+
+bool HKClientCore::publish(PublishInfo& publishInfo)
+{
+    HyperCubeCommand hypeCubeCommand(HYPERCUBECOMMANDS::PUBLISHINFO, publishInfo.to_json(), true);
+    hypeCubeCommand.ack = false;
+    MsgCmd msgCmd(hypeCubeCommand.to_json().dump());
+    return sendMsgOut(msgCmd);
+}
+
 bool HKClientCore::getPacket(Packet& packet)
 {
     Packet::UniquePtr ppacket = 0;
     bool stat = receiveActivity.receiveIn(ppacket);
     if (stat) packet = std::move(*ppacket);
     return stat;
+}
+
+bool HKClientCore::hasReceivedAPacket(void)
+{
+    return receiveActivity.isEmpty();
 }
 
 /*
@@ -1055,3 +1074,12 @@ HKClient::HKClient() :
 HKClient::~HKClient()
 {
 }
+
+bool HKClient::publish(std::string _groupName, std::string _data)
+{
+    PublishInfo publishInfo;
+    publishInfo.groupName = _groupName;
+    publishInfo.publishData = _data;
+    return HKClientCore::publish(publishInfo);
+}
+

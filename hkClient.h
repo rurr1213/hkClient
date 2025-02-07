@@ -42,8 +42,8 @@ public:
     virtual bool onConnect(void) = 0;   // tcp connection established
     virtual bool onDisconnect(void) = 0;    // tcp connection closed
     virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket) = 0;
-    virtual bool onOpenForData(void) = 0;  // open for data
-    virtual bool onClosedForData(void) = 0; // closed for data
+    virtual bool onOpenForDataEvent(void) = 0;  // open for data
+    virtual bool onClosedForDataEvent(void) = 0; // closed for data
 };
 
 class HKClientCore : IHKClientCore
@@ -78,6 +78,7 @@ class HKClientCore : IHKClientCore
             bool init(void);
             bool deinit(void);
             bool receiveIn(Packet::UniquePtr& rppacket);
+            bool isEmpty(void);
             bool onConnect(void);
             bool onDisconnect(void);
         };
@@ -193,13 +194,13 @@ class HKClientCore : IHKClientCore
             virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket);
             virtual bool onConnect(void);
             virtual bool onDisconnect(void);
-            virtual bool onOpenForData(void);
-            virtual bool onClosedForData(void);
+            virtual bool onOpenForDataEvent(void);
+            virtual bool onClosedForDataEvent(void);
             void setConnectionInfo(const ConnectionInfo& rconnectionInfo) { connectionInfo = rconnectionInfo; }
             void setDefaultGroupInfo(const GroupInfo& rgroupInfo) { defaultGroupInfo = rgroupInfo; }
 
-            bool publish(void);
             bool subscribe(std::string _groupName);
+            bool unsubscribe(std::string _groupName);
             bool createGroup(const GroupInfo& _rgroupName);
             bool createGroup(const std::string _groupName);
             bool echoData(std::string data = "");
@@ -210,8 +211,8 @@ class HKClientCore : IHKClientCore
 
         virtual bool onConnect(void);
         virtual bool onDisconnect(void);
-        virtual bool onOpenForData(void);
-        virtual bool onClosedForData(void);
+        virtual bool onOpenForDataEvent(void);
+        virtual bool onClosedForDataEvent(void);
         virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket);
 
         Ctcp::Client client;
@@ -243,10 +244,12 @@ public:
         virtual bool connectionClosed(void) { return true; };
 
         bool getPacket(Packet& packet);
+        bool hasReceivedAPacket(void);
 
         SOCKET getSocket(void) { return client.getSocket(); }
         void setConnectionInfo(const ConnectionInfo& rconnectionInfo) { signallingObject.setConnectionInfo(rconnectionInfo); }
         void setDefaultGroupInfo(const GroupInfo& rgroupInfo) { signallingObject.setDefaultGroupInfo(rgroupInfo); }
+        bool publish(PublishInfo& publishInfo);
 };
 
 class HKClient : public HKClientCore
@@ -257,7 +260,8 @@ public:
     ~HKClient();
     bool init(std::string serverName = HYPERCUBE_SERVER_NAME_PRIMARY, bool reInit = true) { return HKClientCore::init(serverName, reInit); }
     bool subscribe(std::string _groupName) { return signallingObject.subscribe(_groupName);}
-    bool publish(void) { return signallingObject.publish();}
+    bool unsubscribe(std::string _groupName) { return signallingObject.unsubscribe(_groupName);}
+
     bool createGroup(const GroupInfo& _groupInfo) { return signallingObject.createGroup(_groupInfo);}
 //    bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}
     bool sendMsg(Msg& msg) { return sendMsgOut(msg);}
@@ -265,4 +269,5 @@ public:
     bool isConnected(void) { return signallingObject.isConnected(); }
     bool localPing(void) { return signallingObject.localPing(); }
     bool remotePing(void) { return signallingObject.remotePing(); }
+    bool publish(std::string _groupName, std::string _data);
 };

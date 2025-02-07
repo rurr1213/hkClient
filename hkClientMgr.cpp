@@ -5,78 +5,6 @@
 
 // ------------------------------------------------------------
 
-HKDevice::HKDevice(IHKMgr* _pbackChannelMgr, SessionInfo& _rreferenceInfo) :
-	phkMgr{ _pbackChannelMgr},
-	rreferenceInfo{ _rreferenceInfo }
-{
-}
-
-HKDevice::~HKDevice()
-{
-
-}
-
-void HKDevice::init(std::string serverName, bool reInit)
-{
-	HKClient::init(serverName, reInit);
-}
-
-void HKDevice::deinit()
-{
-	HKClient::deinit();
-}
-
-bool HKDevice::onOpenForData(void)
-{
-	rreferenceInfo.sessionKey++;
-	numSendMessages = -1;
-	numReadMessages = 0;
-	phkMgr->onOpenForData();
-	stream.setOpened();
-	return true;
-}
-
-bool HKDevice::onClosedForData(void)
-{
-	if (stream.isOpened()) {
-		stream.setClosed();
-		phkMgr->onClosedForData();
-	}
-	return true;
-}
-
-bool HKDevice::onReceivedData(void)
-{
-	HKClientCore::onReceivedData();
-	return true;
-}
-
-bool HKDevice::recvFromDevice(void)
-{
-	if (!stream.isOpened()) return false;
-
-	bool stat = false;
-	PacketEx packetEx;
-	while (HKClient::getPacket(packetEx.packet)) {
-		packetEx.deviceId = DEVICEID::BACKCHANNEL;
-		stat = true;
-	}
-	return stat;
-}
-
-bool HKDevice::sendMsg(Msg& rmsg, bool forceSend)
-{
-	if (!forceSend) {
-		if (!stream.isOpened()) return false;
-	}
-
-	rreferenceInfo.setupSession(rmsg, ++numSendMessages);
-	rmsg.deviceAppKey = 123;
-	return HKClient::sendMsgOut(rmsg);
-}
-
-// ------------------------------------------------------------
-
 int hkClientMgr::numInputMsgs{ 0 };
 int hkClientMgr::numOutputMsgs{ 0 };
 
@@ -126,23 +54,23 @@ bool hkClientMgr::removeConnection(void)
 	return true;
 }
 
-bool hkClientMgr::onOpenForData(void)
+bool hkClientMgr::onOpenForDataEvent(void)
 {
 	MsgDiscoveryMulticastHello msg;
 //	CommMgr::createHelloMsg(msg);
 	hkDevice.sendMsg(msg, true);
 
 	int deviceId = (int)DEVICEID::BACKCHANNEL;
-	LOG_INFO("hkClientMgr::onOpenForData()", "DeviceIndex", (int)deviceId);
+	LOG_INFO("hkClientMgr::onOpenForDataEvent()", "DeviceIndex", (int)deviceId);
 	_isOpenForData = true;
 	return true;
 }
 
-bool hkClientMgr::onClosedForData(void)
+bool hkClientMgr::onClosedForDataEvent(void)
 {
 	_isOpenForData = false;
 	int deviceId = (int)DEVICEID::BACKCHANNEL;
-	LOG_INFO("hkClientMgr::onClosedForData()", "DeviceIndex", (int)deviceId);
+	LOG_INFO("hkClientMgr::onClosedForDataEvent()", "DeviceIndex", (int)deviceId);
 	return true;
 }
 
