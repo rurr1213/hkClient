@@ -49,10 +49,6 @@ bool HKDeviceMgr::unsubscribe(std::string _groupName) {
     return callHKClientFunc(pHKClient, &HKClient::unsubscribe, _groupName);
 }
 
-bool HKDeviceMgr::publish(std::string _groupName, std::string _data) {
-    return callHKClientFunc(pHKClient, &HKClient::publish, _groupName, _data);
-}
-
 bool HKDeviceMgr::createGroup(const ClientGroupInfo clientGroupInfo)
 {
     GroupInfo groupInfo;
@@ -94,17 +90,78 @@ bool HKDeviceMgr::onClosedForDataEvent(void) {
     return true;
 }
 
+bool HKDeviceMgr::onReceivedDataEvent(void) {
+    msgsReceived.notify();
+    return true;
+}
+
+
 bool HKDeviceMgr::setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder) {
     pMsgDecoder = std::move(_pmsgDecoder);
     return true;
 }
 
 bool HKDeviceMgr::processReceivedMsgs(void) {
+
+    if (!pMsgDecoder) {
+        throw std::runtime_error("MsgDecoder is not initialized");
+    }
+
+    // if no messages were received, return
+    if (!msgsReceived.isReady()) {
+        return false;
+    }
+
+    msgsReceived.reset();
+
     while(callHKClientFunc(pHKClient, &HKClient::hasReceivedAPacket)) {
         PacketEx packetEx;
         packetEx.deviceId = DEVICEID::HK;
         if (getPacket(packetEx.packet)) {
-            pMsgDecoder->onNewPacket(packetEx);
+            std::unique_ptr<Msg> pmsg = MsgExt::factoryMethod(packetEx);
+            if (!pmsg) {
+                return false;
+            }
+            if (MsgJson* msgJson = dynamic_cast<MsgJson*>(pmsg.get())) {
+                if (!MsgExt::checkMsgJson(*msgJson)) {
+                    throw std::runtime_error("MsgJson CRC failed");
+                }
+                std::unique_ptr<CommonInfoBase> pcommonInfoBase = pMsgDecoder->processCmdMsgJson(*msgJson);
+                if (!pcommonInfoBase) throw std::runtime_error("Failed to decode Msgjson");
+                PublishInfoAck* ppublishInfoAck = dynamic_cast<PublishInfoAck*>(pcommonInfoBase.get());
+                if (ppublishInfoAck) {
+                    publishActivity.putInfoAck(*ppublishInfoAck);
+                } else {
+                    throw std::runtime_error("Failed to cast to PublishInfoAck");
+                }
+            }
         }
     }
+
+    return true;
 }
+
+UUIDString HKDeviceMgr::publish(std::string _groupName, std::string _data)
+{
+    PublishInfo publishInfo;
+    publishInfo.groupName = _groupName;
+    publishInfo.publishData = _data;
+    if (!callHKClientFunc(pHKClient, &HKClient::publish, publishInfo)) {
+        return NULL;
+    }
+    return publishInfo.uuid;
+}
+
+bool HKDeviceMgr::getPublishAck(UUIDString _uuid, std::string& ackData)
+{
+    processReceivedMsgs();
+    PublishInfoAck publishInfoAck;
+    if (!publishActivity.getInfoAck(_uuid, publishInfoAck)) {
+        return false;
+    }
+    ackData = publishInfoAck.publishAckData;
+    return true;
+}
+
+
+

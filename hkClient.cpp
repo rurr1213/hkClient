@@ -453,11 +453,12 @@ bool HKClientCore::SignallingObject::onCreateGroupAck(HyperCubeCommand& hyperCub
     GroupInfo groupInfo;
     groupInfo.from_json(hyperCubeCommand.getJsonData());
     std::string jsonDataString = groupInfo.to_json().dump();
+    std::string info = groupInfo.groupName + ", " + groupInfo.uuid;
     if (hyperCubeCommand.status) {
-        LOG_INFO("HKClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck, status:success", 0);
+        LOG_INFO("HKClientCore::SignallingObject::onCreateGroupAck()", info + " status:success", 0);
     }
     else {
-        LOG_NOTE("HKClientCore::SignallingObject::onCreateGroupAck()", "createGroupAck status:Failed - Duplicate name? " + jsonDataString, 0);
+        LOG_NOTE("HKClientCore::SignallingObject::onCreateGroupAck()", info + " status:Failed - Duplicate name? " + jsonDataString, 0);
     }
     return true;
 }
@@ -654,39 +655,43 @@ bool HKClientCore::SignallingObject::remotePing(bool ack, std::string data)
 
 bool HKClientCore::SignallingObject::sendConnectionInfo(std::string _connectionName)
 {
-    LOG_INFO("HKClientCore::sendConnectionInfo()", "", 0);
     connectionInfo.serverIpAddress = servers.getActiveServerInfo().address;
+    std::string info = connectionInfo.clientIpAddress + ", " + connectionInfo.uuid;
+    LOG_INFO("HKClientCore::sendConnectionInfo()", info, 0);
     return sendCmdOut(HYPERCUBECOMMANDS::CONNECTIONINFO, connectionInfo);
 }
 
 bool HKClientCore::SignallingObject::createGroup(std::string _groupName)
 {
-    LOG_INFO("HKClientCore::createGroup()", "", 0);
     GroupInfo groupInfo;
     groupInfo.groupName = _groupName;
     groupInfo.creatorConnectionInfo = connectionInfo;
+    std::string info = groupInfo.groupName + ", " + groupInfo.uuid;
+    LOG_INFO("HKClientCore::createGroup()", info, 0);
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
 }
 
 bool HKClientCore::SignallingObject::createGroup(const GroupInfo& _rgroupInfo)
 {
-    LOG_INFO("HKClientCore::createGroup()", "", 0);
     GroupInfo groupInfo = _rgroupInfo;
     groupInfo.creatorConnectionInfo = connectionInfo;
+    std::string info = _rgroupInfo.groupName + ", " + _rgroupInfo.uuid;
+    LOG_INFO("HKClientCore::createGroup()", info, 0);
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
 }
 
 bool HKClientCore::SignallingObject::createDefaultGroup(void)
 {
-    LOG_INFO("HKClientCore::createDefaultGroup()", "", 0);
     defaultGroupInfo.creatorConnectionInfo = connectionInfo;
     defaultGroupInfo.groupName = connectionInfo.connectionName;
+    std::string info = defaultGroupInfo.groupName + ", " + defaultGroupInfo.uuid;
+    LOG_INFO("HKClientCore::createDefaultGroup()", info, 0);
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, defaultGroupInfo);
 }
 
 bool HKClientCore::SignallingObject::subscribe(std::string _groupName)
 {
-    LOG_INFO("HKClientCore::subscribe()", "", 0);
+    LOG_INFO("HKClientCore::subscribe()", _groupName, 0);
     SubscriberInfo subscriberInfo;
     subscriberInfo.groupName = _groupName;
     return sendCmdOut(HYPERCUBECOMMANDS::SUBSCRIBE, subscriberInfo);
@@ -694,7 +699,7 @@ bool HKClientCore::SignallingObject::subscribe(std::string _groupName)
 
 bool HKClientCore::SignallingObject::unsubscribe(std::string _groupName)
 {
-    LOG_INFO("HKClientCore::unsubscribe()", "", 0);
+    LOG_INFO("HKClientCore::unsubscribe()", _groupName, 0);
     SubscriberInfo subscriberInfo;
     subscriberInfo.groupName = _groupName;
     return sendCmdOut(HYPERCUBECOMMANDS::UNSUBSCRIBE, subscriberInfo);
@@ -1064,6 +1069,7 @@ bool HKClient::doShell(void)
 
 */
 
+
 // ------------------------------------------------------------
 
 HKClient::HKClient() :
@@ -1075,11 +1081,9 @@ HKClient::~HKClient()
 {
 }
 
-bool HKClient::publish(std::string _groupName, std::string _data)
+bool HKClient::publish(PublishInfo& publishInfo)
 {
-    PublishInfo publishInfo;
-    publishInfo.groupName = _groupName;
-    publishInfo.publishData = _data;
     return HKClientCore::publish(publishInfo);
 }
+
 

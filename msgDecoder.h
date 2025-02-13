@@ -3,6 +3,15 @@
 #include "Packet.h"
 #include "MsgExt.h"
 
+enum COMMANDS {
+	CMD_NONE,
+	PROC_SUSPEND,
+	ADMIN_UPLOADSTATE,
+	ADMIN_UPLOADSTATS,
+	ADMIN_UPLOADLOGS,
+	CMD_TOGGLEMATRXIGUI,
+};
+
 class Cmd {
 	//static map <std::string, COMMANDS> g_mapStringToCommands;
 	std::map <std::string, COMMANDS > g_mapStringToCommands;
@@ -18,18 +27,15 @@ public:
 
 class MsgDecoder
 {
+	template <typename T>
+	bool getCommandFromJson(T& obj, const json& jsonData, const std::string& command);
+	template <typename T, typename U>
+	bool getObjFromSrcObjJson(T& obj, U& srcObj, const std::string& command);
 public:
-    bool MsgDecoder::onNewPacket(PacketEx& packetEx);
-    virtual bool MsgDecoder::onCmd(const MsgCmd& _msgCmd);
-    virtual bool MsgDecoder::onMsgObj(const MsgObjectEx& _msgObjectEx);
-    virtual bool MsgDecoder::onJsonCmd(const MsgCmd& _msgCmd);
+    bool onNewPacket(PacketEx& packetEx);
+    virtual bool processCmdMsgJson(PacketEx& packetEx);
+	std::unique_ptr<CommonInfoBase> processCmdMsgJson(MsgJson& rmsgJson);
 };
 
-enum COMMANDS {
-	CMD_NONE,
-	ADMIN_UPLOADSTATE,
-	ADMIN_UPLOADSTATS,
-	ADMIN_UPLOADLOGS,
-};
 
 

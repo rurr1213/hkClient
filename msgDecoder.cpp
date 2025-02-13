@@ -1,14 +1,16 @@
 #include <memory>
 #include "msgDecoder.h"
 #include "Logger.h"
-#include "MessagesCommon.h"
 #include "MsgExt.h"
+#include "mserdes.h"
+#include "hkClient.h"
 
 using namespace std;
 
 Cmd::Cmd(string jsonString) : command{CMD_NONE},
 	g_mapStringToCommands {
-		{"none", CMD_NONE }
+		{"none", CMD_NONE },
+		{"suspendProcesses", PROC_SUSPEND},
 }
 {
 	fromJsonString(jsonString);
@@ -39,24 +41,25 @@ string Cmd::toJsonString(void)
 
 bool MsgDecoder::onNewPacket(PacketEx& packetEx)
 {
-	unique_ptr<Msg> pmsg = MsgExt::factoryMethod(packetEx);
+	bool stat = false;
+   	MSerDes mserDes;
+	Msg msg;
+	mserDes.packetToMsg(&packetEx.packet, msg);
 
-	switch (pmsg->subSys) {
+	switch (msg.subSys) {
 		case SUBSYS_DISCOVERY:
 			break;
 		case SUBSYS_STATS:
 			break;
 		case SUBSYS_CMD:
-			{
-				const MsgCmd* pmsgCmd = (MsgCmd*)pmsg.get();
-				onCmd(*pmsgCmd);
+			switch(msg.command) {
+				case CMD_JSON:
+					stat = processCmdMsgJson(packetEx);
+					break;
+				default:
+				break;
 			}
-			break;
 		case SUBSYS_OBJ:
-			{
-				const MsgObjectEx* pmsgOE = (MsgObjectEx*)pmsg.get();
-				onMsgObj(*pmsgOE);
-			}
 			break;
 		default:
 			break;
@@ -65,42 +68,90 @@ bool MsgDecoder::onNewPacket(PacketEx& packetEx)
 	return true;
 }
 
-bool MsgDecoder::onCmd(const MsgCmd& _msgCmd)
+template <typename T>
+bool MsgDecoder::getCommandFromJson(T& obj, const json& jsonData, const std::string& command) {
+    try {
+        obj.from_json(jsonData);
+        return true;
+    } catch (const std::exception& e) {
+		std::string errorMsg = "MsgDecoder::getCommandFromJson():" + command;
+		LOG_WARNING(errorMsg, "jsonData:" + jsonData.dump(), 0);
+		LOG_WARNING(errorMsg, "Failed to decode json" + std::string(e.what()), 0);
+        return false;
+    }
+}
+
+template <typename T, typename U>
+bool MsgDecoder::getObjFromSrcObjJson(T& obj, U& srcObj, const std::string& command) {
+    try {
+        obj.from_json(srcObj.getJsonData());
+        return true;
+    } catch (const std::exception& e) {
+		std::string errorMsg = "MsgDecoder::getObjFromSrcObjJson():" + command;
+		json jsonData = srcObj.getJsonData();
+		LOG_WARNING(errorMsg, "jsonData:" + jsonData.dump(), 0);
+		LOG_WARNING(errorMsg, "Failed to decode json" + std::string(e.what()), 0);
+        return false;
+    }
+}
+
+
+bool MsgDecoder::processCmdMsgJson(PacketEx& packetEx)
 {
-	switch (_msgCmd.command) {
-	case CMD_PCJSON:
-		onJsonCmd(_msgCmd);
-		break;
-	default:
-		break;
+    MSerDes mserDes;
+	MsgJson msgJson;
+	json jsonData;
+	assert(mserDes.packetToMsgJson(&packetEx.packet, msgJson, jsonData));
+
+	bool msgProcessed = false;
+	std::string cmdString;
+
+	HyperCubeCommand hyperCubeCommand(HYPERCUBECOMMANDS::NONE, NULL, true);
+	HyperCubeCommand hyperCubeCommandAck(HYPERCUBECOMMANDS::NONE, NULL, true);;
+	hyperCubeCommand.from_json(jsonData);
+
+	try{
+		getCommandFromJson(hyperCubeCommand, jsonData, "MsgDecoder::processSigMsgJson():command");
+		switch(hyperCubeCommand.command) {
+			case HYPERCUBECOMMANDS::PUBLISHINFO:
+			{
+				cmdString= "PUBLISHINFOACK";
+				PublishInfoAck publishInfoAck;
+				getObjFromSrcObjJson(publishInfoAck, hyperCubeCommand, cmdString);
+			} break;
+		}
+	} catch (const std::exception& e) {
+		LOG_WARNING("MsgDecoder::processCmdMsgJson()", "Failed to decode json" + std::string(e.what()), 0);
 	}
+
 	return true;
 }
 
-bool MsgDecoder::onMsgObj(const MsgObjectEx& _msgObjectEx)
+std::unique_ptr<CommonInfoBase> MsgDecoder::processCmdMsgJson(MsgJson& rmsgJson)
 {
-	switch (_msgObjectEx.command) {
-	case OBJ_MATRIXMGR:
-		break;
-	case OBJ_LOGGER:
-		break;
-	case OBJ_APPMGR:
-		break;
-	case OBJ_STATSMGR:
-		break;
-	default:
-		LOG_WARNING("MsgDecoder::onMsgObj()", "unknown command", _msgObjectEx.command);
-		break;
-	}
-	return true;
-}
+	json jsonData =json::parse(rmsgJson.jsonData);
+	std::unique_ptr<CommonInfoBase> pcommonInfoBase;
 
-bool MsgDecoder::onJsonCmd(const MsgCmd& _msgCmd)
-{
-	Cmd cmd(_msgCmd.jsonData);
-	switch (cmd.command) {
-	default:
-		break;
+	bool msgProcessed = false;
+	std::string cmdString;
+
+	HyperCubeCommand hyperCubeCommand(HYPERCUBECOMMANDS::NONE, NULL, true);
+	HyperCubeCommand hyperCubeCommandAck(HYPERCUBECOMMANDS::NONE, NULL, true);;
+	hyperCubeCommand.from_json(jsonData);
+
+	try{
+		getCommandFromJson(hyperCubeCommand, jsonData, "MsgDecoder::processSigMsgJson():command");
+		switch(hyperCubeCommand.command) {
+			case HYPERCUBECOMMANDS::PUBLISHINFO:
+			{
+				cmdString= "PUBLISHINFOACK";
+				pcommonInfoBase = std::make_unique<PublishInfoAck>();
+				getObjFromSrcObjJson(*pcommonInfoBase, hyperCubeCommand, cmdString);
+			} break;
+		}
+	} catch (const std::exception& e) {
+		LOG_WARNING("MsgDecoder::processCmdMsgJson()", "Failed to decode json" + std::string(e.what()), 0);
 	}
-	return true;
+
+	return pcommonInfoBase;
 }

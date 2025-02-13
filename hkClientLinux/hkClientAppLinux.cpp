@@ -82,7 +82,12 @@ bool HyperCubeClientShell::doShell(void)
                 exitNow = true;
                 break;
             case 'p':
-                publish();
+                {
+                    PublishInfo publishInfo;
+                    publishInfo.groupName = "defaultTopic";
+                    publishInfo.publishData = "defaultMessage";
+                    publish(publishInfo);
+                }
                 break;
             case 's':
                 subscribe("groupName");

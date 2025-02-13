@@ -13,8 +13,9 @@ find_package(Threads REQUIRED)
 
 set(LIB_SOURCE_FILES
     hkClient.cpp
-    hkClientMgr.cpp
-    hkClientMgrExt.cpp
+    hkDevice.cpp
+    hkDeviceMgr.cpp
+    msgDecoder.cpp
 )
 
 set(EXE_SOURCE_FILES
@@ -64,7 +65,6 @@ target_include_directories(hkClientAppLinux PUBLIC
 
 target_link_libraries(hkClientAppLinux
     hkClientLib
-    ${CMAKE_THREAD_LIBS_INIT}
 )
 
 # Set the executable output directory

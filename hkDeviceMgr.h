@@ -7,14 +7,35 @@
 #include "Packet.h"
 #include "hkDeviceMgrI.h"
 #include "msgDecoder.h"
+#include "sthread.h"
 
 class HKClient;
+typedef std::string UUIDString;
+
+class PublishActivity {
+    std::map<std::string, PublishInfoAck> activityMap;
+public:
+    void putInfoAck(const PublishInfoAck& publishInfoAck) {
+        activityMap[publishInfoAck.uuid] = publishInfoAck;
+    }
+    bool getInfoAck(UUIDString uuid, PublishInfoAck& publishInfoAck) {
+        if (activityMap.find(uuid) == activityMap.end()) {
+            return false;
+        }
+        publishInfoAck = activityMap[uuid];
+        return true;
+    }
+};
 
 class HKDeviceMgr : public IHKDeviceMgr
 {
 
     std::unique_ptr<HKClient> pHKClient;
     std::unique_ptr<MsgDecoder> pMsgDecoder;
+    CstdConditional msgsReceived;
+    static const int RECEIVEMSG_WAITTIMEOUT_MSECS = 1000;
+
+    PublishActivity publishActivity;
 
     public:
         class ClientGroupInfo {
@@ -41,7 +62,8 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         bool subscribe(std::string _groupName);
         bool unsubscribe(std::string _groupName);
-        bool publish(std::string _groupName, std::string data);
+        UUIDString publish(std::string _groupName, std::string data);
+        bool getPublishAck(UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
         bool remotePing(void);
@@ -53,6 +75,7 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         bool onOpenForDataEvent(void);
         bool onClosedForDataEvent(void);
+        bool onReceivedDataEvent(void);
 
         bool setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder);
         bool processReceivedMsgs(void);

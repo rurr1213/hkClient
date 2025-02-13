@@ -21,6 +21,8 @@
 #define uint128_t   __int128
 #endif
 
+typedef uint64_t TId;
+
 class IHKClientCore
 {
     Ctcp::Client& rtcpClient;
@@ -269,5 +271,5 @@ public:
     bool isConnected(void) { return signallingObject.isConnected(); }
     bool localPing(void) { return signallingObject.localPing(); }
     bool remotePing(void) { return signallingObject.remotePing(); }
-    bool publish(std::string _groupName, std::string _data);
+    bool publish(PublishInfo& publishInfo) ;
 };
