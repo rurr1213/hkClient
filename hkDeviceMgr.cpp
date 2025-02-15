@@ -183,7 +183,6 @@ bool HKDeviceMgr::publishAck(PublishInfo& publishInfo, std::string response)
 
 bool HKDeviceMgr::waitForPublishAck(UUIDString _uuid, std::string& ackData)
 {
-    processReceivedMsgs();
     PublishInfoAck publishInfoAck;
     if (!publishActivity.waitForInfoAck(_uuid, publishInfoAck, PUBLISHACK_WAITTIMEOUT_MSECS)) {
         return false;
