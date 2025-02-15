@@ -213,8 +213,6 @@ class HKClientCore : IHKClientCore
 
         virtual bool onConnect(void);
         virtual bool onDisconnect(void);
-        virtual bool onOpenForDataEvent(void);
-        virtual bool onClosedForDataEvent(void);
         virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket);
 
         Ctcp::Client client;
@@ -244,6 +242,8 @@ public:
         bool deinit(void);
 
         virtual bool connectionClosed(void) { return true; };
+        virtual bool onOpenForDataEvent(void);
+        virtual bool onClosedForDataEvent(void);
 
         bool getPacket(Packet& packet);
         bool hasReceivedAPacket(void);
@@ -252,6 +252,7 @@ public:
         void setConnectionInfo(const ConnectionInfo& rconnectionInfo) { signallingObject.setConnectionInfo(rconnectionInfo); }
         void setDefaultGroupInfo(const GroupInfo& rgroupInfo) { signallingObject.setDefaultGroupInfo(rgroupInfo); }
         bool publish(PublishInfo& publishInfo);
+        bool publishAck(PublishInfoAck& publishInfoAck);
 };
 
 class HKClient : public HKClientCore
@@ -263,6 +264,9 @@ public:
     bool init(std::string serverName = HYPERCUBE_SERVER_NAME_PRIMARY, bool reInit = true) { return HKClientCore::init(serverName, reInit); }
     bool subscribe(std::string _groupName) { return signallingObject.subscribe(_groupName);}
     bool unsubscribe(std::string _groupName) { return signallingObject.unsubscribe(_groupName);}
+
+    virtual bool onOpenForDataEvent(void);
+	virtual bool onClosedForDataEvent(void);
 
     bool createGroup(const GroupInfo& _groupInfo) { return signallingObject.createGroup(_groupInfo);}
 //    bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}

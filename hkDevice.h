@@ -77,11 +77,11 @@ class HKDevice : public HKClient
 public:
 	HKDevice(IHKDeviceMgr* _phkMgr, SessionInfo& _rreferenceInfo);
 	~HKDevice();
-	void init(std::string serverName = "", bool reInit = false);
-	void deinit();
+	bool init(std::string serverName = "", bool reInit = false);
+	bool deinit();
 
-	bool onOpenForData(void);
-	bool onClosedForData(void);
+	virtual bool onOpenForDataEvent(void);
+	virtual bool onClosedForDataEvent(void);
 	bool onReceivedData(void);
 
 //	void onGlobalConfigUpdate(Config::Status& configStatus);

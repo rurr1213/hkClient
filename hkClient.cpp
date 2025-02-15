@@ -24,6 +24,25 @@ using namespace std;
 #else
 #endif
 
+/**
+ * @defgroup ServerConnection Server Connection
+ * @{
+ */
+
+/**
+ * @brief Enable/Disable Server connection checks using a perioding PING.
+ *
+ * If the ping fails, this will disconnect the connection and reconnect.
+ * This is to ensure the connection is always valid. If the connection to the
+ * primary server fails, it will try the secondary server and keep alternating periodically.
+ *
+ * For debugging purposes, it is helpful to turn this off, to make it easier to track message
+ * progress through the system.
+ */
+//#define ENABLE_PING_CONNECT_CHECK
+
+/** @} */  // end of ServerConnection
+
 // ------------------------------------------------------------------------------------------------
 
 void HKClientCore::PacketQWithLock::init(void)
@@ -159,7 +178,8 @@ bool HKClientCore::RecvActivity::receiveIn(Packet::UniquePtr& rppacket) {
 }
 
 bool HKClientCore::RecvActivity::isEmpty(void) {
-    return inPacketQ.isEmpty();
+    bool empty = inPacketQ.isEmpty();
+    return empty;
 }
 
 // ------------------------------------------------------------------
@@ -397,6 +417,7 @@ bool HKClientCore::SignallingObject::connectIfNotConnected(void)
         localPingAckTimer.init();
         numLocalPingAcks = 0;
     }
+    #ifdef ENABLE_PING_CONNECT_CHECK
     // if local ping ack took too long, then shutdown connection and try again
     if (localPingAckTimer.isElapsed(HYPERCUBE_LOCALPINGACKTIME)) {
         uint64_t elapsedTime = localPingAckTimer.elapsed() / 1000000000;
@@ -406,6 +427,8 @@ bool HKClientCore::SignallingObject::connectIfNotConnected(void)
 
     // do a periodic ping to server. This will start the localPingAckTimer and the ack will stop it
     if (connected) localPing(true, "Connection status ping");
+    
+    #endif
 
     return stat;
 }
@@ -603,6 +626,7 @@ bool HKClientCore::SignallingObject::onDisconnect(void)
 
 bool HKClientCore::SignallingObject::onOpenForDataEvent(void)
 {
+    LOG_INFO("HKClientCore::onOpenForDataEvent()", "", 0);
     LOG_STATESTRING("HKClientCore-state", "openForData");
     pIHyperCubeClientCore->onOpenForDataEvent();
     return true;
@@ -610,6 +634,7 @@ bool HKClientCore::SignallingObject::onOpenForDataEvent(void)
 
 bool HKClientCore::SignallingObject::onClosedForDataEvent(void)
 {
+    LOG_INFO("HKClientCore::onClosedForData()", "", 0);
     LOG_STATESTRING("HKClientCore-state", "closedForData");
     pIHyperCubeClientCore->onClosedForDataEvent();
     return true;
@@ -864,6 +889,14 @@ bool HKClientCore::publish(PublishInfo& publishInfo)
     return sendMsgOut(msgCmd);
 }
 
+bool HKClientCore::publishAck(PublishInfoAck& publishInfoAck)
+{
+    HyperCubeCommand hypeCubeCommand(HYPERCUBECOMMANDS::PUBLISHINFOACK, publishInfoAck.to_json(), true);
+    hypeCubeCommand.ack = false;
+    MsgCmd msgCmd(hypeCubeCommand.to_json().dump());
+    return sendMsgOut(msgCmd);
+}
+
 bool HKClientCore::getPacket(Packet& packet)
 {
     Packet::UniquePtr ppacket = 0;
@@ -874,7 +907,7 @@ bool HKClientCore::getPacket(Packet& packet)
 
 bool HKClientCore::hasReceivedAPacket(void)
 {
-    return receiveActivity.isEmpty();
+    return !receiveActivity.isEmpty();
 }
 
 /*
@@ -1087,3 +1120,14 @@ bool HKClient::publish(PublishInfo& publishInfo)
 }
 
 
+bool HKClient::onOpenForDataEvent(void)
+{
+    LOG_INFO("HKClient::onOpenForDataEvent()", "", numInputMsgs);
+    return true;
+}
+
+bool HKClient::onClosedForDataEvent(void)
+{
+    LOG_INFO("HKClient::onClosedForDataEvent()", "", numInputMsgs);
+    return true;
+}

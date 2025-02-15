@@ -119,6 +119,8 @@ bool MsgDecoder::processCmdMsgJson(PacketEx& packetEx)
 				PublishInfoAck publishInfoAck;
 				getObjFromSrcObjJson(publishInfoAck, hyperCubeCommand, cmdString);
 			} break;
+			default:
+				break;
 		}
 	} catch (const std::exception& e) {
 		LOG_WARNING("MsgDecoder::processCmdMsgJson()", "Failed to decode json" + std::string(e.what()), 0);
@@ -127,10 +129,9 @@ bool MsgDecoder::processCmdMsgJson(PacketEx& packetEx)
 	return true;
 }
 
-std::unique_ptr<CommonInfoBase> MsgDecoder::processCmdMsgJson(MsgJson& rmsgJson)
+bool MsgDecoder::processCmdMsgJson(MsgJson& rmsgJson, std::unique_ptr<CommonInfoBase> &pcommonInfoBase, HYPERCUBECOMMANDS &command)
 {
 	json jsonData =json::parse(rmsgJson.jsonData);
-	std::unique_ptr<CommonInfoBase> pcommonInfoBase;
 
 	bool msgProcessed = false;
 	std::string cmdString;
@@ -138,20 +139,29 @@ std::unique_ptr<CommonInfoBase> MsgDecoder::processCmdMsgJson(MsgJson& rmsgJson)
 	HyperCubeCommand hyperCubeCommand(HYPERCUBECOMMANDS::NONE, NULL, true);
 	HyperCubeCommand hyperCubeCommandAck(HYPERCUBECOMMANDS::NONE, NULL, true);;
 	hyperCubeCommand.from_json(jsonData);
+	command = hyperCubeCommand.command;
 
 	try{
 		getCommandFromJson(hyperCubeCommand, jsonData, "MsgDecoder::processSigMsgJson():command");
-		switch(hyperCubeCommand.command) {
+		switch(command) {
 			case HYPERCUBECOMMANDS::PUBLISHINFO:
+			{
+				cmdString= "PUBLISHINFO";
+				pcommonInfoBase = std::make_unique<PublishInfo>();
+				return getObjFromSrcObjJson(*pcommonInfoBase, hyperCubeCommand, cmdString);
+			} break;
+			case HYPERCUBECOMMANDS::PUBLISHINFOACK:
 			{
 				cmdString= "PUBLISHINFOACK";
 				pcommonInfoBase = std::make_unique<PublishInfoAck>();
-				getObjFromSrcObjJson(*pcommonInfoBase, hyperCubeCommand, cmdString);
+				return getObjFromSrcObjJson(*pcommonInfoBase, hyperCubeCommand, cmdString);
 			} break;
+			default:
+				break;
 		}
 	} catch (const std::exception& e) {
 		LOG_WARNING("MsgDecoder::processCmdMsgJson()", "Failed to decode json" + std::string(e.what()), 0);
 	}
 
-	return pcommonInfoBase;
+	return false;
 }

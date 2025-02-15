@@ -34,7 +34,7 @@ class MsgDecoder
 public:
     bool onNewPacket(PacketEx& packetEx);
     virtual bool processCmdMsgJson(PacketEx& packetEx);
-	std::unique_ptr<CommonInfoBase> processCmdMsgJson(MsgJson& rmsgJson);
+	bool processCmdMsgJson(MsgJson& rmsgJson, std::unique_ptr<CommonInfoBase> &pcommonInfoBase, HYPERCUBECOMMANDS &command);
 };
 
 

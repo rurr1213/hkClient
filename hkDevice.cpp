@@ -16,17 +16,17 @@ HKDevice::~HKDevice()
 
 }
 
-void HKDevice::init(std::string serverName, bool reInit)
+bool HKDevice::init(std::string serverName, bool reInit)
 {
-	HKClient::init(serverName, reInit);
+	return HKClient::init(serverName, reInit);
 }
 
-void HKDevice::deinit()
+bool HKDevice::deinit()
 {
-	HKClient::deinit();
+	return HKClient::deinit();
 }
 
-bool HKDevice::onOpenForData(void)
+bool HKDevice::onOpenForDataEvent(void)
 {
 	rreferenceInfo.sessionKey++;
 	numSendMessages = -1;
@@ -36,7 +36,7 @@ bool HKDevice::onOpenForData(void)
 	return true;
 }
 
-bool HKDevice::onClosedForData(void)
+bool HKDevice::onClosedForDataEvent(void)
 {
 	if (stream.isOpened()) {
 		stream.setClosed();
@@ -48,7 +48,9 @@ bool HKDevice::onClosedForData(void)
 bool HKDevice::onReceivedData(void)
 {
 	HKClientCore::onReceivedData();
+
 	if (stream.isOpened()) {
+		LOG_DBG("HKDevice::onReceivedData()", "received data", 0);
 		phkMgr->onReceivedDataEvent();
 	}
 	return true;

@@ -1,11 +1,14 @@
 #include <stdlib.h>
 
 #include "hkDeviceMgr.h"
-#include "hkClient.h"
+#include "hkDevice.h"
+#include "Logger.h"
 
 HKDeviceMgr::HKDeviceMgr()
 {
-    pHKClient = std::make_unique<HKClient>();
+    SessionInfo sessionInfo;
+    sessionInfo.deviceAppKey = APPID;
+    pHKDevice = std::make_unique<HKDevice>(this, sessionInfo);
 }
 
 HKDeviceMgr::~HKDeviceMgr()
@@ -13,9 +16,9 @@ HKDeviceMgr::~HKDeviceMgr()
 }
 
 template <typename Func, typename... Args>
-auto callHKClientFunc(std::unique_ptr<HKClient>& client, Func func, Args&&... args) -> decltype((client.get()->*func)(std::forward<Args>(args)...)) {
-    if (client) {
-        return (client.get()->*func)(std::forward<Args>(args)...);
+auto callHKClientFunc(std::unique_ptr<HKDevice>& device, Func func, Args&&... args) -> decltype((device.get()->*func)(std::forward<Args>(args)...)) {
+    if (device) {
+        return (device.get()->*func)(std::forward<Args>(args)...);
     }
     throw std::runtime_error("HKClient is not initialized");
 }
@@ -33,53 +36,53 @@ bool HKDeviceMgr::init(const ClientConnectionInfo _clientConnectionInfo) {
     connectionInfo.userUUID        = _clientConnectionInfo.userUUID;
     connectionInfo.displayName     = _clientConnectionInfo.displayName;
 
-    pHKClient->setConnectionInfo(connectionInfo);
-    return callHKClientFunc(pHKClient, &HKClient::init, HYPERCUBE_SERVER_NAME_PRIMARY, true);
+    pHKDevice->setConnectionInfo(connectionInfo);
+    return callHKClientFunc(pHKDevice, &HKDevice::init, HYPERCUBE_SERVER_NAME_PRIMARY, true);
 }
 
 bool HKDeviceMgr::deinit(void) {
-    return callHKClientFunc(pHKClient, &HKClient::deinit);
+    return callHKClientFunc(pHKDevice, &HKDevice::deinit);
 }
 
 bool HKDeviceMgr::subscribe(std::string _groupName) {
-    return callHKClientFunc(pHKClient, &HKClient::subscribe, _groupName);
+    return callHKClientFunc(pHKDevice, &HKDevice::subscribe, _groupName);
 }
 
 bool HKDeviceMgr::unsubscribe(std::string _groupName) {
-    return callHKClientFunc(pHKClient, &HKClient::unsubscribe, _groupName);
+    return callHKClientFunc(pHKDevice, &HKDevice::unsubscribe, _groupName);
 }
 
 bool HKDeviceMgr::createGroup(const ClientGroupInfo clientGroupInfo)
 {
     GroupInfo groupInfo;
     groupInfo.groupName = clientGroupInfo.groupName;
-    return callHKClientFunc(pHKClient, &HKClient::createGroup, groupInfo);
+    return callHKClientFunc(pHKDevice, &HKDevice::createGroup, groupInfo);
 }
 
 bool HKDeviceMgr::sendEcho(std::string data) {
     data = clientConnectionInfo.displayName + " " + data;
-    return callHKClientFunc(pHKClient, &HKClient::sendEcho, data);
+    return callHKClientFunc(pHKDevice, &HKDevice::sendEcho, data);
 }
 
 bool HKDeviceMgr::isConnected(void) {
-    return callHKClientFunc(pHKClient, &HKClient::isConnected);
+    return callHKClientFunc(pHKDevice, &HKDevice::isConnected);
 }
 
 bool HKDeviceMgr::hasReceivedData(void) {
-    return callHKClientFunc(pHKClient, &HKClient::hasReceivedAPacket);
+    return callHKClientFunc(pHKDevice, &HKDevice::hasReceivedAPacket);
 }
 
 bool HKDeviceMgr::getPacket(Packet& packet) {
-    return callHKClientFunc(pHKClient, &HKClient::getPacket, packet);
+    return callHKClientFunc(pHKDevice, &HKDevice::getPacket, packet);
 }
 
 bool HKDeviceMgr::sendCmdMsg(std::string command) {
     MsgCmd cmdMsg(command);
-    return callHKClientFunc(pHKClient, &HKClient::sendMsg, cmdMsg);
+    return callHKClientFunc(pHKDevice, &HKDevice::sendMsg, cmdMsg, false);
 }
 
 bool HKDeviceMgr::remotePing(void) {
-    return callHKClientFunc(pHKClient, &HKClient::remotePing);
+    return callHKClientFunc(pHKDevice, &HKDevice::remotePing);
 }
 
 bool HKDeviceMgr::onOpenForDataEvent(void) {
@@ -91,6 +94,7 @@ bool HKDeviceMgr::onClosedForDataEvent(void) {
 }
 
 bool HKDeviceMgr::onReceivedDataEvent(void) {
+    LOG_DBG("HKDeviceMgr::onReceivedDataEvent()", "received data", 0);
     msgsReceived.notify();
     return true;
 }
@@ -114,7 +118,7 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
 
     msgsReceived.reset();
 
-    while(callHKClientFunc(pHKClient, &HKClient::hasReceivedAPacket)) {
+    while(callHKClientFunc(pHKDevice, &HKDevice::hasReceivedAPacket)) {
         PacketEx packetEx;
         packetEx.deviceId = DEVICEID::HK;
         if (getPacket(packetEx.packet)) {
@@ -123,21 +127,33 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
                 return false;
             }
             if (MsgJson* msgJson = dynamic_cast<MsgJson*>(pmsg.get())) {
-                if (!MsgExt::checkMsgJson(*msgJson)) {
-                    throw std::runtime_error("MsgJson CRC failed");
-                }
-                std::unique_ptr<CommonInfoBase> pcommonInfoBase = pMsgDecoder->processCmdMsgJson(*msgJson);
-                if (!pcommonInfoBase) throw std::runtime_error("Failed to decode Msgjson");
-                PublishInfoAck* ppublishInfoAck = dynamic_cast<PublishInfoAck*>(pcommonInfoBase.get());
-                if (ppublishInfoAck) {
-                    publishActivity.putInfoAck(*ppublishInfoAck);
-                } else {
-                    throw std::runtime_error("Failed to cast to PublishInfoAck");
+                if (!MsgExt::checkMsgJson(*msgJson)) throw std::runtime_error("MsgJson CRC failed");
+
+                HYPERCUBECOMMANDS command = HYPERCUBECOMMANDS::NONE;
+                std::unique_ptr<CommonInfoBase> pcommonInfoBase;
+
+                if (!pMsgDecoder->processCmdMsgJson(*msgJson, pcommonInfoBase, command)) return false;
+                switch(command) {
+                    case HYPERCUBECOMMANDS::PUBLISHINFO:
+                    {
+                        PublishInfo* ppublishInfo = dynamic_cast<PublishInfo*>(pcommonInfoBase.get());
+                        if (!ppublishInfo) return false;
+                        onPublishInfo(*ppublishInfo);
+                    }
+                    break;
+                    case HYPERCUBECOMMANDS::PUBLISHINFOACK:
+                    {
+                        PublishInfoAck* ppublishInfoAck = dynamic_cast<PublishInfoAck*>(pcommonInfoBase.get());
+                        if (!ppublishInfoAck) return false;
+                        onPublishInfoAck(*ppublishInfoAck);
+                    }
+                    break;
+                    default:
+                        break;
                 }
             }
         }
     }
-
     return true;
 }
 
@@ -146,10 +162,22 @@ UUIDString HKDeviceMgr::publish(std::string _groupName, std::string _data)
     PublishInfo publishInfo;
     publishInfo.groupName = _groupName;
     publishInfo.publishData = _data;
-    if (!callHKClientFunc(pHKClient, &HKClient::publish, publishInfo)) {
+    if (!callHKClientFunc(pHKDevice, &HKDevice::publish, publishInfo)) {
         return NULL;
     }
     return publishInfo.uuid;
+}
+
+bool HKDeviceMgr::publishAck(PublishInfo& publishInfo, std::string response)
+{
+    PublishInfoAck publishInfoAck;
+    publishInfoAck.uuid = publishInfo.uuid;
+    publishInfoAck.publishAckData = response;
+    publishInfoAck.destinationConnectionId = publishInfo.originatingConnectionId;
+    publishInfoAck.destinationUUID = publishInfo.originatorUUID;
+    publishInfoAck.groupName = publishInfo.groupName;
+    publishInfoAck.responderUUID = "hkShell";
+    return callHKClientFunc(pHKDevice, &HKClient::publishAck, publishInfoAck);
 }
 
 bool HKDeviceMgr::getPublishAck(UUIDString _uuid, std::string& ackData)
@@ -163,5 +191,13 @@ bool HKDeviceMgr::getPublishAck(UUIDString _uuid, std::string& ackData)
     return true;
 }
 
+bool HKDeviceMgr::onPublishInfo(PublishInfo& publishInfo)
+{
+    return true;
+}
 
-
+bool HKDeviceMgr::onPublishInfoAck(PublishInfoAck& publishInfoAck)
+{
+    publishActivity.putInfoAck(publishInfoAck);
+    return true;
+}

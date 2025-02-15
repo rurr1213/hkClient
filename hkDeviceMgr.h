@@ -9,7 +9,7 @@
 #include "msgDecoder.h"
 #include "sthread.h"
 
-class HKClient;
+class HKDevice;
 typedef std::string UUIDString;
 
 class PublishActivity {
@@ -30,7 +30,7 @@ public:
 class HKDeviceMgr : public IHKDeviceMgr
 {
 
-    std::unique_ptr<HKClient> pHKClient;
+    std::unique_ptr<HKDevice> pHKDevice;
     std::unique_ptr<MsgDecoder> pMsgDecoder;
     CstdConditional msgsReceived;
     static const int RECEIVEMSG_WAITTIMEOUT_MSECS = 1000;
@@ -63,6 +63,7 @@ class HKDeviceMgr : public IHKDeviceMgr
         bool subscribe(std::string _groupName);
         bool unsubscribe(std::string _groupName);
         UUIDString publish(std::string _groupName, std::string data);
+        bool publishAck(PublishInfo& publishInfo, std::string response);
         bool getPublishAck(UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
@@ -79,4 +80,7 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         bool setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder);
         bool processReceivedMsgs(void);
-};
+
+        virtual bool onPublishInfo(PublishInfo& publishInfo);
+        virtual bool onPublishInfoAck(PublishInfoAck& publishInfoAck);
+    };
