@@ -39,6 +39,7 @@ target_include_directories(hkClientLib PUBLIC
 # Link libraries for the hkClient library
 target_link_libraries(hkClientLib
     ${CMAKE_THREAD_LIBS_INIT}
+    uuid
 )
 
 # Set the library output directory
