@@ -14,17 +14,32 @@ typedef std::string UUIDString;
 
 class PublishActivity {
     std::map<std::string, PublishInfoAck> activityMap;
+    std::mutex qLock;
+    CstdConditional activityIn;
 public:
+    PublishActivity() {}
+    ~PublishActivity() {}
+    /**
+     * @brief This can be called from a service thread
+     */
     void putInfoAck(const PublishInfoAck& publishInfoAck) {
+        std::lock_guard<std::mutex> lock(qLock);
         activityMap[publishInfoAck.uuid] = publishInfoAck;
+        activityIn.notify();
     }
-    bool getInfoAck(UUIDString uuid, PublishInfoAck& publishInfoAck) {
+    /**
+     * @brief This can be called from a UI thread
+     */
+    bool waitForInfoAck(UUIDString uuid, PublishInfoAck& publishInfoAck, int timeoutMsSecs) {
+        if (!activityIn.waitUntil(timeoutMsSecs)) return false;
+        std::lock_guard<std::mutex> lock(qLock);
         if (activityMap.find(uuid) == activityMap.end()) {
             return false;
         }
         publishInfoAck = activityMap[uuid];
         return true;
     }
+
 };
 
 class HKDeviceMgr : public IHKDeviceMgr
@@ -34,8 +49,24 @@ class HKDeviceMgr : public IHKDeviceMgr
     std::unique_ptr<MsgDecoder> pMsgDecoder;
     CstdConditional msgsReceived;
     static const int RECEIVEMSG_WAITTIMEOUT_MSECS = 1000;
+    static const int PROCESSMSG_WAITTIMEOUT_MSECS = 1000;
+    static const int PUBLISHACK_WAITTIMEOUT_MSECS = 1000;
 
     PublishActivity publishActivity;
+
+    /**
+     * @brief This class creates a service thread for serving input messages
+     * after they come in and other non-time-sensitive tasks. Effectively a
+     * bottom half handler.
+    */
+    class ServiceActivity : CstdThread {
+            HKDeviceMgr* phkDeviceMgr = 0;
+            virtual bool threadFunction(void) { phkDeviceMgr->serviceActivityThread(this); return true; }
+        public:
+            ServiceActivity(HKDeviceMgr* _phkDeviceMgr) : phkDeviceMgr(_phkDeviceMgr), CstdThread(this) {}
+            bool init(void) { CstdThread::init(true); return true; }
+            bool deinit(void) { CstdThread::deinit(true); return true; }
+    } serviceActivity;
 
     public:
         class ClientGroupInfo {
@@ -64,7 +95,7 @@ class HKDeviceMgr : public IHKDeviceMgr
         bool unsubscribe(std::string _groupName);
         UUIDString publish(std::string _groupName, std::string data);
         bool publishAck(PublishInfo& publishInfo, std::string response);
-        bool getPublishAck(UUIDString _uuid, std::string& ackData);
+        bool waitForPublishAck(UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
         bool remotePing(void);
@@ -83,4 +114,6 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         virtual bool onPublishInfo(PublishInfo& publishInfo);
         virtual bool onPublishInfoAck(PublishInfoAck& publishInfoAck);
+
+        bool serviceActivityThread(CstdThread* pCstdThread);
     };

@@ -4,7 +4,7 @@
 #include "hkDevice.h"
 #include "Logger.h"
 
-HKDeviceMgr::HKDeviceMgr()
+HKDeviceMgr::HKDeviceMgr() : serviceActivity(this)
 {
     SessionInfo sessionInfo;
     sessionInfo.deviceAppKey = APPID;
@@ -23,9 +23,10 @@ auto callHKClientFunc(std::unique_ptr<HKDevice>& device, Func func, Args&&... ar
     throw std::runtime_error("HKClient is not initialized");
 }
 
-bool HKDeviceMgr::init(const ClientConnectionInfo _clientConnectionInfo) {
+bool HKDeviceMgr::init(const ClientConnectionInfo _clientConnectionInfo)
+{
+    serviceActivity.init();
     clientConnectionInfo = _clientConnectionInfo;
-
     ConnectionInfo connectionInfo;
     connectionInfo.connectionName  = _clientConnectionInfo.connectionName;
     connectionInfo.appUUID         = _clientConnectionInfo.appUUID;
@@ -41,7 +42,9 @@ bool HKDeviceMgr::init(const ClientConnectionInfo _clientConnectionInfo) {
 }
 
 bool HKDeviceMgr::deinit(void) {
-    return callHKClientFunc(pHKDevice, &HKDevice::deinit);
+    bool stat = callHKClientFunc(pHKDevice, &HKDevice::deinit);
+    serviceActivity.deinit();
+    return stat;
 }
 
 bool HKDeviceMgr::subscribe(std::string _groupName) {
@@ -111,10 +114,8 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
         throw std::runtime_error("MsgDecoder is not initialized");
     }
 
-    // if no messages were received, return
-    if (!msgsReceived.isReady()) {
-        return false;
-    }
+    // wait for a message
+    if (!msgsReceived.waitUntil(PROCESSMSG_WAITTIMEOUT_MSECS));
 
     msgsReceived.reset();
 
@@ -180,11 +181,11 @@ bool HKDeviceMgr::publishAck(PublishInfo& publishInfo, std::string response)
     return callHKClientFunc(pHKDevice, &HKClient::publishAck, publishInfoAck);
 }
 
-bool HKDeviceMgr::getPublishAck(UUIDString _uuid, std::string& ackData)
+bool HKDeviceMgr::waitForPublishAck(UUIDString _uuid, std::string& ackData)
 {
     processReceivedMsgs();
     PublishInfoAck publishInfoAck;
-    if (!publishActivity.getInfoAck(_uuid, publishInfoAck)) {
+    if (!publishActivity.waitForInfoAck(_uuid, publishInfoAck, PUBLISHACK_WAITTIMEOUT_MSECS)) {
         return false;
     }
     ackData = publishInfoAck.publishAckData;
@@ -199,5 +200,16 @@ bool HKDeviceMgr::onPublishInfo(PublishInfo& publishInfo)
 bool HKDeviceMgr::onPublishInfoAck(PublishInfoAck& publishInfoAck)
 {
     publishActivity.putInfoAck(publishInfoAck);
+    return true;
+}
+
+/**
+ * @brief This service thread loops endlessly until no longer needed.
+ */
+bool HKDeviceMgr::serviceActivityThread(CstdThread* pCstdThread)
+{
+    while(!pCstdThread->checkIfShouldExit()) {
+        processReceivedMsgs();
+    }
     return true;
 }
