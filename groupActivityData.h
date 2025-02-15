@@ -8,14 +8,20 @@
 #include <memory>
 #include "sthread.h"
 
-class PublishActivityDataObject {
+/**
+ * @defgroup GroupActivityData Group Activity Data
+ * @{
+ */
 
-    class Command {
-    };
-
-    class CommandInstanceInfo {
-    };
-
+/**
+ * @brief This is a threadsafe object that can be used to add and remove group information.
+ * Info can be added by a receive (producer) thread and can be retrieved by multiple
+ * consumer threads. The locking is designed to be granular to allow independent
+ * consumer thread access, without blocking each other.
+ */
+template <typename GroupName, typename Command, typename CommandInstanceInfo>
+class GroupActivityData {
+public:
     class CommandInstanceList : public std::list<std::shared_ptr<CommandInstanceInfo>> {
         std::mutex qLock;
         CstdConditional activityIn;
@@ -77,10 +83,10 @@ class PublishActivityDataObject {
     /*
      * @brief Dictionary of group name to group
      */
-    class GroupsMap : public std::map<std::string, std::shared_ptr<CommandsMap>> {
+    class GroupsMap : public std::map<GroupName, std::shared_ptr<CommandsMap>> {
         std::mutex qLock;
     public:
-        bool add(const std::string groupName, const Command& command, const std::shared_ptr<CommandInstanceInfo>& pcommandInstanceInfo) {
+        bool add(const GroupName groupName, const Command& command, const std::shared_ptr<CommandInstanceInfo>& pcommandInstanceInfo) {
             std::shared_ptr<CommandsMap> pcommandsMap;
             {
                 std::lock_guard<std::mutex> lock(qLock);
@@ -92,7 +98,7 @@ class PublishActivityDataObject {
             }
             return pcommandsMap->add(command, pcommandInstanceInfo);
         }
-        bool removeWait(const std::string groupName, const Command& command, std::shared_ptr<CommandInstanceInfo>& pcommandInstanceInfo, int timeoutMsSecs = 0) {
+        bool removeWait(const GroupName groupName, const Command& command, std::shared_ptr<CommandInstanceInfo>& pcommandInstanceInfo, int timeoutMsSecs = 0) {
             std::shared_ptr<CommandsMap> pcommandsMap;
             {
                 std::lock_guard<std::mutex> lock(qLock);
@@ -102,13 +108,18 @@ class PublishActivityDataObject {
             }
             return pcommandsMap->removeWait(command, pcommandInstanceInfo, timeoutMsSecs);
         }
-        bool contains(std::string groupName) {
+        bool contains(GroupName groupName) {
             std::lock_guard<std::mutex> lock(qLock);
-            return (std::map<std::string, std::shared_ptr<CommandsMap>>::find(groupName) != this->end());
+            return (std::map<GroupName, std::shared_ptr<CommandsMap>>::find(groupName) != this->end());
         }
-        bool erase(std::string groupName) {
+        bool erase(GroupName groupName) {
             std::lock_guard<std::mutex> lock(qLock);
-            return this->erase(groupName);
+            return std::map<GroupName, std::shared_ptr<CommandsMap>>::erase(groupName);
         }
     } groups;
+
+    // Declare the test class as a friend
+    friend class GroupActivityDataTest;
 };
+
+/** @} */ // end of GroupActivityData

@@ -8,6 +8,7 @@
 #include "hkDeviceMgrI.h"
 #include "msgDecoder.h"
 #include "sthread.h"
+#include "groupActivityData.h"
 
 class HKDevice;
 typedef std::string UUIDString;
@@ -53,6 +54,8 @@ class HKDeviceMgr : public IHKDeviceMgr
     static const int PUBLISHACK_WAITTIMEOUT_MSECS = 1000;
 
     PublishActivity publishActivity;
+
+    GroupActivityData<std::string, HYPERCUBECOMMANDS, CommonInfoBase> groupData;
 
     /**
      * @brief This class creates a service thread for serving input messages

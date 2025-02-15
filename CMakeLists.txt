@@ -25,6 +25,8 @@ set(EXE_SOURCE_FILES
 add_subdirectory(genCppTools)
 add_subdirectory(CommonCppDartCode)
 
+add_subdirectory(tests)
+
 add_library(hkClientLib STATIC ${LIB_SOURCE_FILES} $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}genCppToolsObjects> $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}CommonCppDartCodeObjects>)
 
 # Include directories for the hkClient library

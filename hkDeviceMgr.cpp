@@ -115,7 +115,7 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
     }
 
     // wait for a message
-    if (!msgsReceived.waitUntil(PROCESSMSG_WAITTIMEOUT_MSECS));
+    if (!msgsReceived.waitUntil(PROCESSMSG_WAITTIMEOUT_MSECS)) return false;
 
     msgsReceived.reset();
 
