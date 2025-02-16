@@ -181,13 +181,16 @@ bool HKDeviceMgr::publishAck(PublishInfo& publishInfo, std::string response)
     return callHKClientFunc(pHKDevice, &HKClient::publishAck, publishInfoAck);
 }
 
-bool HKDeviceMgr::waitForPublishAck(UUIDString _uuid, std::string& ackData)
+bool HKDeviceMgr::waitForPublishAck(std::string groupName, UUIDString _uuid, std::string& ackData)
 {
     PublishInfoAck publishInfoAck;
-    if (!publishActivity.waitForInfoAck(_uuid, publishInfoAck, PUBLISHACK_WAITTIMEOUT_MSECS)) {
+    std::shared_ptr<CommonInfoBase> pcommonInfoBase;
+    if (!groupData.findWait(groupName, HYPERCUBECOMMANDS::PUBLISHINFOACK, _uuid, pcommonInfoBase))
         return false;
-    }
-    ackData = publishInfoAck.publishAckData;
+
+    std::shared_ptr<PublishInfoAck> ppublishInfoAck = std::dynamic_pointer_cast<PublishInfoAck>(pcommonInfoBase);
+    if (!ppublishInfoAck) return false;
+    ackData = ppublishInfoAck->publishAckData;
     return true;
 }
 
@@ -198,7 +201,10 @@ bool HKDeviceMgr::onPublishInfo(PublishInfo& publishInfo)
 
 bool HKDeviceMgr::onPublishInfoAck(PublishInfoAck& publishInfoAck)
 {
-    publishActivity.putInfoAck(publishInfoAck);
+    groupData.add(publishInfoAck.groupName,
+        HYPERCUBECOMMANDS::PUBLISHINFOACK,
+        std::make_shared<PublishInfoAck>(publishInfoAck));
+//    publishActivity.putInfoAck(publishInfoAck);
     return true;
 }
 

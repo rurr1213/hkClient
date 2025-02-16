@@ -53,7 +53,7 @@ class HKDeviceMgr : public IHKDeviceMgr
     static const int PROCESSMSG_WAITTIMEOUT_MSECS = 1000;
     static const int PUBLISHACK_WAITTIMEOUT_MSECS = 1000;
 
-    PublishActivity publishActivity;
+//    PublishActivity publishActivity;
 
     GroupActivityData<std::string, HYPERCUBECOMMANDS, CommonInfoBase> groupData;
 
@@ -98,7 +98,7 @@ class HKDeviceMgr : public IHKDeviceMgr
         bool unsubscribe(std::string _groupName);
         UUIDString publish(std::string _groupName, std::string data);
         bool publishAck(PublishInfo& publishInfo, std::string response);
-        bool waitForPublishAck(UUIDString _uuid, std::string& ackData);
+        bool waitForPublishAck(std::string groupName, UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
         bool remotePing(void);
