@@ -4,12 +4,16 @@
 
 class Command {
 public:
-    bool operator<(const Command&) const {
-        return false; // Implement comparison logic if needed
+    bool operator<(const Command& other) const {
+        // Implement comparison logic if needed
+        return false;
     }
 };
 
-class CommandInstanceInfo {};
+class CommandInstanceInfo {
+public:
+    std::string uuid;
+};
 
 using GroupName = std::string;
 
@@ -20,48 +24,66 @@ protected:
 
 TEST_F(GroupActivityDataTest, AddCommandInstanceInfo) {
     auto pcommandInstanceInfo = std::make_shared<CommandInstanceInfo>();
+    pcommandInstanceInfo->uuid = "uuid1";
     Command command;
     GroupName groupName = "testGroup";
 
-    bool result = groupActivityData.groups.add(groupName, command, pcommandInstanceInfo);
+    bool result = groupActivityData.add(groupName, command, pcommandInstanceInfo);
     EXPECT_TRUE(result);
 }
 
 TEST_F(GroupActivityDataTest, RemoveCommandInstanceInfo) {
     auto pcommandInstanceInfo = std::make_shared<CommandInstanceInfo>();
+    pcommandInstanceInfo->uuid = "uuid1";
     Command command;
     GroupName groupName = "testGroup";
 
-    groupActivityData.groups.add(groupName, command, pcommandInstanceInfo);
+    groupActivityData.add(groupName, command, pcommandInstanceInfo);
 
     std::shared_ptr<CommandInstanceInfo> removedInstanceInfo;
-    bool result = groupActivityData.groups.removeWait(groupName, command, removedInstanceInfo);
+    bool result = groupActivityData.removeWait(groupName, command, removedInstanceInfo);
     EXPECT_TRUE(result);
     EXPECT_EQ(pcommandInstanceInfo, removedInstanceInfo);
 }
 
-TEST_F(GroupActivityDataTest, ContainsGroup) {
+TEST_F(GroupActivityDataTest, FindCommandInstanceInfo) {
     auto pcommandInstanceInfo = std::make_shared<CommandInstanceInfo>();
+    pcommandInstanceInfo->uuid = "uuid1";
     Command command;
     GroupName groupName = "testGroup";
 
-    groupActivityData.groups.add(groupName, command, pcommandInstanceInfo);
+    groupActivityData.add(groupName, command, pcommandInstanceInfo);
 
-    bool result = groupActivityData.groups.contains(groupName);
+    std::shared_ptr<CommandInstanceInfo> foundInstanceInfo;
+    bool result = groupActivityData.findWait(groupName, command, "uuid1", foundInstanceInfo);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(pcommandInstanceInfo, foundInstanceInfo);
+}
+
+TEST_F(GroupActivityDataTest, ContainsGroup) {
+    auto pcommandInstanceInfo = std::make_shared<CommandInstanceInfo>();
+    pcommandInstanceInfo->uuid = "uuid1";
+    Command command;
+    GroupName groupName = "testGroup";
+
+    groupActivityData.add(groupName, command, pcommandInstanceInfo);
+
+    bool result = groupActivityData.contains(groupName);
     EXPECT_TRUE(result);
 }
 
 TEST_F(GroupActivityDataTest, EraseGroup) {
     auto pcommandInstanceInfo = std::make_shared<CommandInstanceInfo>();
+    pcommandInstanceInfo->uuid = "uuid1";
     Command command;
     GroupName groupName = "testGroup";
 
-    groupActivityData.groups.add(groupName, command, pcommandInstanceInfo);
+    groupActivityData.add(groupName, command, pcommandInstanceInfo);
 
-    bool result = groupActivityData.groups.erase(groupName);
+    bool result = groupActivityData.erase(groupName);
     EXPECT_TRUE(result);
 
-    result = groupActivityData.groups.contains(groupName);
+    result = groupActivityData.contains(groupName);
     EXPECT_FALSE(result);
 }
 
