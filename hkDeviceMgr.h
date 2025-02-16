@@ -13,36 +13,6 @@
 class HKDevice;
 typedef std::string UUIDString;
 
-class PublishActivity {
-    std::map<std::string, PublishInfoAck> activityMap;
-    std::mutex qLock;
-    CstdConditional activityIn;
-public:
-    PublishActivity() {}
-    ~PublishActivity() {}
-    /**
-     * @brief This can be called from a service thread
-     */
-    void putInfoAck(const PublishInfoAck& publishInfoAck) {
-        std::lock_guard<std::mutex> lock(qLock);
-        activityMap[publishInfoAck.uuid] = publishInfoAck;
-        activityIn.notify();
-    }
-    /**
-     * @brief This can be called from a UI thread
-     */
-    bool waitForInfoAck(UUIDString uuid, PublishInfoAck& publishInfoAck, int timeoutMsSecs) {
-        if (!activityIn.waitUntil(timeoutMsSecs)) return false;
-        std::lock_guard<std::mutex> lock(qLock);
-        if (activityMap.find(uuid) == activityMap.end()) {
-            return false;
-        }
-        publishInfoAck = activityMap[uuid];
-        return true;
-    }
-
-};
-
 class HKDeviceMgr : public IHKDeviceMgr
 {
 
@@ -52,8 +22,6 @@ class HKDeviceMgr : public IHKDeviceMgr
     static const int RECEIVEMSG_WAITTIMEOUT_MSECS = 1000;
     static const int PROCESSMSG_WAITTIMEOUT_MSECS = 1000;
     static const int PUBLISHACK_WAITTIMEOUT_MSECS = 1000;
-
-//    PublishActivity publishActivity;
 
     GroupActivityData<std::string, HYPERCUBECOMMANDS, CommonInfoBase> groupData;
 
