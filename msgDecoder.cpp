@@ -38,7 +38,7 @@ string Cmd::toJsonString(void)
 }
 
 // -----------------------------------------------------------------------
-
+/*
 bool MsgDecoder::onNewPacket(PacketEx& packetEx)
 {
 	bool stat = false;
@@ -67,7 +67,7 @@ bool MsgDecoder::onNewPacket(PacketEx& packetEx)
 
 	return true;
 }
-
+*/
 template <typename T>
 bool MsgDecoder::getCommandFromJson(T& obj, const json& jsonData, const std::string& command) {
     try {
@@ -95,7 +95,7 @@ bool MsgDecoder::getObjFromSrcObjJson(T& obj, U& srcObj, const std::string& comm
     }
 }
 
-
+/*
 bool MsgDecoder::processCmdMsgJson(PacketEx& packetEx)
 {
     MSerDes mserDes;
@@ -128,7 +128,7 @@ bool MsgDecoder::processCmdMsgJson(PacketEx& packetEx)
 
 	return true;
 }
-
+*/
 bool MsgDecoder::processCmdMsgJson(MsgJson& rmsgJson, std::unique_ptr<CommonInfoBase> &pcommonInfoBase, HYPERCUBECOMMANDS &command)
 {
 	json jsonData =json::parse(rmsgJson.jsonData);

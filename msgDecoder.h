@@ -32,8 +32,8 @@ class MsgDecoder
 	template <typename T, typename U>
 	bool getObjFromSrcObjJson(T& obj, U& srcObj, const std::string& command);
 public:
-    bool onNewPacket(PacketEx& packetEx);
-    virtual bool processCmdMsgJson(PacketEx& packetEx);
+//    bool onNewPacket(PacketEx& packetEx);
+//    virtual bool processCmdMsgJson(PacketEx& packetEx);
 	bool processCmdMsgJson(MsgJson& rmsgJson, std::unique_ptr<CommonInfoBase> &pcommonInfoBase, HYPERCUBECOMMANDS &command);
 };
 
