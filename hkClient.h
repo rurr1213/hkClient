@@ -211,8 +211,6 @@ class HKClientCore : IHKClientCore
             bool remotePing(bool ack = false, std::string data = "remotePingFromClient");
         };
 
-        virtual bool onConnect(void);
-        virtual bool onDisconnect(void);
         virtual bool isSignallingMsg(std::unique_ptr<Packet>& rppacket);
 
         Ctcp::Client client;
@@ -221,6 +219,8 @@ class HKClientCore : IHKClientCore
         SendActivity sendActivity;
 
 protected:
+        virtual bool onConnect(void);
+        virtual bool onDisconnect(void);
         SignallingObject signallingObject;
 
         static const int SERVER_PORT = HYPERCUBE_SERVER_PORT;

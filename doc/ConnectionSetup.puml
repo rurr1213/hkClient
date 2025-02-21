@@ -1,27 +1,37 @@
 @startuml CallSequences
 autonumber
 
-HKClientCore_SignallingObject --> HKClientCore_SignallingObject : threadFunction() #blue
-HKClientCore_SignallingObject --> HKClientCore_SignallingObject : connectIfNotConnected() #blue
-HKClientCore_SignallingObject --> HKClientCore_SignallingObject : connect() #blue
-HKClientCore_SignallingObject --> IHyperCubeClientCore : tcpConnect() #blue
-IHyperCubeClientCore --> Ctcp_Client : connect() #blue
-HKClientCore_SignallingObject --> HKClientCore_SignallingObject : setupConnection()
-HKClientCore_SignallingObject --> IHyperCubeClientCore : onConnect()
-IHyperCubeClientCore --> HKClientCore : onConnect()
-HkClientCore --> HKClientCore_SignallingObject : onConnect()
-HkClientCore --> HKClientCore_receiveActivity : onConnect()
-HkClientCore --> HKClientCore_sendActivity : onConnect()
+HKClientCore_SignallingObject [#blue]--> HKClientCore_SignallingObject : threadFunction()
+HKClientCore_SignallingObject [#blue]--> HKClientCore_SignallingObject : connectIfNotConnected()
+HKClientCore_SignallingObject [#blue]--> HKClientCore_SignallingObject : connect() #blue
+HKClientCore_SignallingObject [#blue]--> IHyperCubeClientCore : tcpConnect() #blue
+IHyperCubeClientCore [#blue]--> Ctcp_Client : connect() #blue
+HKClientCore_SignallingObject [#blue]--> HKClientCore_SignallingObject : setupConnection()
+HKClientCore_SignallingObject [#blue]--> IHyperCubeClientCore : onConnect()
+IHyperCubeClientCore [#blue]--> HKDevice : onConnect()
+HKDevice [#blue]--> HKClientCore : onConnect()
+HKClientCore [#blue]--> HKClientCore_SignallingObject : onConnect()
+HKClientCore [#blue]--> HKClientCore_receiveActivity : onConnect()
+HKClientCore [#blue]--> HKClientCore_sendActivity : onConnect()
+HKDevice [#blue]--> HKDeviceMgr : onConnect()
+HKDeviceMgr [#blue]--> HKShell : onConnect()
+HKDeviceMgr [#blue]--> HKShell : startShellService()
+HKDeviceMgr [#blue]--> HKShell : bashRemoteServer.start()
 
 HKClientCore_SignallingObject --> HKClientCore_SignallingObject : onOpenForData()
 HKClientCore_SignallingObject --> IHyperCubeClientCore : onOpenForData()
 HKClientCore_SignallingObject --> HKClientCore_SignallingObject : onClosedForData()
 HKClientCore_SignallingObject --> IHyperCubeClientCore : onClosedForData()
 
-IHyperCubeClientCore --> HKClientCore : onDisconnect()
-HkClientCore --> HKClientCore_SignallingObject : onDisconnect()
-HkClientCore --> HKClientCore_receiveActivity : onDisconnect()
-HkClientCore --> HKClientCore_sendActivity : onDisconnect()
-HKClientCore --> HKClientCore : onClosedForDataEvent()
+IHyperCubeClientCore [#red]--> HKDevice : onDisconnect()
+HKDevice [#red]--> HKDeviceMgr : onDisconnect()
+HKDeviceMgr [#red]--> HKShell : stopShellService()
+HKDeviceMgr [#red]--> HKShell : bashRemoteServer.stop()
+
+HKDevice [#red]--> HKClientCore : onDisconnect()
+HKClientCore [#red]--> HKClientCore_SignallingObject : onDisconnect()
+HKClientCore [#red]--> HKClientCore_receiveActivity : onDisconnect()
+HKClientCore [#red]--> HKClientCore_sendActivity : onDisconnect()
+HKClientCore [#red]--> HKClientCore : onClosedForDataEvent()
 
 @enduml
