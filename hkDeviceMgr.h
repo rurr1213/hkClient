@@ -6,7 +6,7 @@
 
 #include "Packet.h"
 #include "hkDeviceMgrI.h"
-#include "msgDecoder.h"
+#include "msgJsonCmdPayload.h"
 #include "sthread.h"
 #include "groupActivityData.h"
 
@@ -17,7 +17,7 @@ class HKDeviceMgr : public IHKDeviceMgr
 {
 
     std::unique_ptr<HKDevice> pHKDevice;
-    std::unique_ptr<MsgDecoder> pMsgDecoder;
+    std::unique_ptr<MsgJsonCmdPayload> pMsgDecoder;
     CstdConditional msgsReceived;
     static const int RECEIVEMSG_WAITTIMEOUT_MSECS = 1000;
     static const int PROCESSMSG_WAITTIMEOUT_MSECS = 1000;
@@ -80,7 +80,7 @@ class HKDeviceMgr : public IHKDeviceMgr
         bool onClosedForDataEvent(void);
         bool onReceivedDataEvent(void);
 
-        bool setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder);
+        bool setReceiveMsgProcessor(std::unique_ptr<MsgJsonCmdPayload> _pmsgDecoder);
         bool processReceivedMsgs(void);
 
         virtual bool onPublishInfo(PublishInfo& publishInfo);

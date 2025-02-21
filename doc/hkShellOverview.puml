@@ -1,0 +1,19 @@
+@startuml hkShell overview
+
+package "HkService" {
+    node Service
+}
+package "Shell" {
+package "BASH Services" {
+    node Bash1
+    node BashN
+}
+}
+package "Vsg Viewer" {
+    node vsgViewer
+}
+
+HkService -> "Vsg Viewer" : startViewer() vsgViewer args
+HkService -> Shell : startShell() @shell
+Shell -> "BASH Services" : startBash() @bash
+@enduml

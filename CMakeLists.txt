@@ -15,7 +15,6 @@ set(LIB_SOURCE_FILES
     hkClient.cpp
     hkDevice.cpp
     hkDeviceMgr.cpp
-    msgDecoder.cpp
 )
 
 set(EXE_SOURCE_FILES

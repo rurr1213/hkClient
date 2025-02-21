@@ -103,7 +103,7 @@ bool HKDeviceMgr::onReceivedDataEvent(void) {
 }
 
 
-bool HKDeviceMgr::setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecoder) {
+bool HKDeviceMgr::setReceiveMsgProcessor(std::unique_ptr<MsgJsonCmdPayload> _pmsgDecoder) {
     pMsgDecoder = std::move(_pmsgDecoder);
     return true;
 }
@@ -111,7 +111,7 @@ bool HKDeviceMgr::setReceiveMsgProcessor(std::unique_ptr<MsgDecoder> _pmsgDecode
 bool HKDeviceMgr::processReceivedMsgs(void) {
 
     if (!pMsgDecoder) {
-        throw std::runtime_error("MsgDecoder is not initialized");
+        throw std::runtime_error("MsgJsonCmdPayload is not initialized");
     }
 
     // wait for a message
@@ -129,13 +129,13 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
             if (!pmsg) {
                 return false;
             }
-            if (MsgJson* msgJson = dynamic_cast<MsgJson*>(pmsg.get())) {
+            if (MsgJsonCmd* msgJson = dynamic_cast<MsgJsonCmd*>(pmsg.get())) {
                 if (!MsgExt::checkMsgJson(*msgJson)) throw std::runtime_error("MsgJson CRC failed");
 
                 HYPERCUBECOMMANDS command = HYPERCUBECOMMANDS::NONE;
                 std::unique_ptr<CommonInfoBase> pcommonInfoBase;
 
-                if (!pMsgDecoder->processCmdMsgJson(*msgJson, pcommonInfoBase, command)) return false;
+                if (!pMsgDecoder->decode(*msgJson, pcommonInfoBase, command)) return false;
                 switch(command) {
                     case HYPERCUBECOMMANDS::PUBLISHINFO:
                     {

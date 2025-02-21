@@ -895,8 +895,8 @@ bool HKClientCore::publishAck(PublishInfoAck& publishInfoAck)
 {
     HyperCubeCommand hypeCubeCommand(HYPERCUBECOMMANDS::PUBLISHINFOACK, publishInfoAck.to_json(), true);
     hypeCubeCommand.ack = false;
-    MsgCmd msgCmd(hypeCubeCommand.to_json().dump());
-    return sendMsgOut(msgCmd);
+    MsgJsonCmd msgJsonCmd(hypeCubeCommand.to_json().dump());
+    return sendMsgOut(msgJsonCmd);
 }
 
 bool HKClientCore::getPacket(Packet& packet)
