@@ -1,0 +1,27 @@
+@startuml CallSequences
+autonumber
+
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : threadFunction() #blue
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : connectIfNotConnected() #blue
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : connect() #blue
+HKClientCore_SignallingObject --> IHyperCubeClientCore : tcpConnect() #blue
+IHyperCubeClientCore --> Ctcp_Client : connect() #blue
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : setupConnection()
+HKClientCore_SignallingObject --> IHyperCubeClientCore : onConnect()
+IHyperCubeClientCore --> HKClientCore : onConnect()
+HkClientCore --> HKClientCore_SignallingObject : onConnect()
+HkClientCore --> HKClientCore_receiveActivity : onConnect()
+HkClientCore --> HKClientCore_sendActivity : onConnect()
+
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : onOpenForData()
+HKClientCore_SignallingObject --> IHyperCubeClientCore : onOpenForData()
+HKClientCore_SignallingObject --> HKClientCore_SignallingObject : onClosedForData()
+HKClientCore_SignallingObject --> IHyperCubeClientCore : onClosedForData()
+
+IHyperCubeClientCore --> HKClientCore : onDisconnect()
+HkClientCore --> HKClientCore_SignallingObject : onDisconnect()
+HkClientCore --> HKClientCore_receiveActivity : onDisconnect()
+HkClientCore --> HKClientCore_sendActivity : onDisconnect()
+HKClientCore --> HKClientCore : onClosedForDataEvent()
+
+@enduml
