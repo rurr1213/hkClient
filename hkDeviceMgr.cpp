@@ -122,8 +122,10 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
     while(callHKClientFunc(pHKDevice, &HKDevice::hasReceivedAPacket)) {
         PacketEx packetEx;
         packetEx.deviceId = DEVICEID::HK;
+        short int subSys = 0;
+        short int command = 0;
         if (getPacket(packetEx.packet)) {
-            std::unique_ptr<Msg> pmsg = MsgExt::factoryMethod(packetEx);
+            std::unique_ptr<Msg> pmsg = MsgExt::factoryMethod(packetEx, subSys, command);
             if (!pmsg) {
                 return false;
             }
