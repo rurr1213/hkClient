@@ -82,6 +82,8 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         bool setReceiveMsgProcessor(std::unique_ptr<MsgJsonCmdPayload> _pmsgDecoder);
         bool processReceivedMsgs(void);
+        bool processIncomingPacket(PacketEx& packetEx);
+        bool processCmdMsgJson(MsgContext& msgContext);
 
         virtual bool onPublishInfo(PublishInfo& publishInfo);
         virtual bool onPublishInfoAck(PublishInfoAck& publishInfoAck);

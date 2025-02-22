@@ -125,39 +125,70 @@ bool HKDeviceMgr::processReceivedMsgs(void) {
         short int subSys = 0;
         short int command = 0;
         if (getPacket(packetEx.packet)) {
-            std::unique_ptr<Msg> pmsg = MsgExt::factoryMethod(packetEx, subSys, command);
-            if (!pmsg) {
-                return false;
-            }
-            if (MsgJsonCmd* msgJson = dynamic_cast<MsgJsonCmd*>(pmsg.get())) {
-                if (!MsgExt::checkMsgJson(*msgJson)) throw std::runtime_error("MsgJson CRC failed");
-
-                HYPERCUBECOMMANDS command = HYPERCUBECOMMANDS::NONE;
-                std::unique_ptr<CommonInfoBase> pcommonInfoBase;
-
-                if (!pMsgDecoder->decode(*msgJson, pcommonInfoBase, command)) return false;
-                switch(command) {
-                    case HYPERCUBECOMMANDS::PUBLISHINFO:
-                    {
-                        PublishInfo* ppublishInfo = dynamic_cast<PublishInfo*>(pcommonInfoBase.get());
-                        if (!ppublishInfo) return false;
-                        onPublishInfo(*ppublishInfo);
-                    }
-                    break;
-                    case HYPERCUBECOMMANDS::PUBLISHINFOACK:
-                    {
-                        PublishInfoAck* ppublishInfoAck = dynamic_cast<PublishInfoAck*>(pcommonInfoBase.get());
-                        if (!ppublishInfoAck) return false;
-                        onPublishInfoAck(*ppublishInfoAck);
-                    }
-                    break;
-                    default:
-                        break;
-                }
-            }
+            processIncomingPacket(packetEx);
         }
     }
     return true;
+}
+
+bool HKDeviceMgr::processIncomingPacket(PacketEx& packetEx)
+{
+	bool stat = false;
+	bool route = true;
+    MsgContext msgContext = MsgContext();
+    bool payLoadKnown = msgContext.decodePacketToMsg(packetEx);
+
+	switch(msgContext.subSys) {
+		case SUBSYS_CMD:
+			switch(msgContext.command) {
+				case CMD_JSON:
+					stat = processCmdMsgJson(msgContext);
+					route = false;
+					break;
+				default:
+				break;
+			}
+			break;
+		default:
+		break;
+	}
+	return stat;
+}
+
+bool HKDeviceMgr::processCmdMsgJson(MsgContext& msgContext)
+{
+	String cmdString= "NONE";
+
+	try{
+		bool msgProcessed = false;
+		if (!msgContext.decodeMsgToHyperCubeCommand()) return false;
+
+		if (!MsgJsonCmdPayload::decode(msgContext)) return false;
+
+		if (!msgContext.pcommonInfoBase) return false;
+
+        switch(msgContext.hyperCubeCommand.command) {
+            case HYPERCUBECOMMANDS::PUBLISHINFO:
+            {
+                PublishInfo* ppublishInfo = dynamic_cast<PublishInfo*>(msgContext.pcommonInfoBase.get());
+                if (!ppublishInfo) return false;
+                onPublishInfo(*ppublishInfo);
+            }
+            break;
+            case HYPERCUBECOMMANDS::PUBLISHINFOACK:
+            {
+                PublishInfoAck* ppublishInfoAck = dynamic_cast<PublishInfoAck*>(msgContext.pcommonInfoBase.get());
+                if (!ppublishInfoAck) return false;
+                onPublishInfoAck(*ppublishInfoAck);
+            }
+            break;
+            default:
+                break;
+        }
+	} catch(std::exception& e) {
+		assert(false);
+	}
+	return true;
 }
 
 UUIDString HKDeviceMgr::publish(std::string _groupName, std::string _data)
