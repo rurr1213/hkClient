@@ -80,6 +80,9 @@ public:
 	bool init(std::string serverName = "", bool reInit = false);
 	bool deinit();
 
+	virtual bool onConnect(void);   // tcp connection established
+    virtual bool onDisconnect(void);    // tcp connection closed
+	
 	virtual bool onOpenForDataEvent(void);
 	virtual bool onClosedForDataEvent(void);
 	bool onReceivedData(void);

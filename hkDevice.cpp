@@ -26,6 +26,20 @@ bool HKDevice::deinit()
 	return HKClient::deinit();
 }
 
+bool HKDevice::onConnect(void)
+{
+	HKClientCore::onConnect(); //ensure its all setup
+	phkMgr->onConnect();	//tell the manager
+	return true;
+}
+
+bool HKDevice::onDisconnect(void)
+{
+	phkMgr->onDisconnect();
+	HKClientCore::onDisconnect();
+	return true;
+}
+
 bool HKDevice::onOpenForDataEvent(void)
 {
 	rreferenceInfo.sessionKey++;

@@ -7,6 +7,8 @@ class PublishInfoAck;
 class IHKDeviceMgr
 {
 public:
+	virtual bool onConnect(void) = 0;
+	virtual bool onDisconnect(void) = 0;
 	virtual bool onOpenForDataEvent(void) = 0;
 	virtual bool onClosedForDataEvent(void) = 0;
 	virtual bool onReceivedDataEvent(void) = 0;

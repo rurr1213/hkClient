@@ -407,9 +407,9 @@ bool HKClientCore::SignallingObject::connectIfNotConnected(void)
         LOG_STATESTRING("HKClientCore-ServerIP", servers.getActiveServerAddress());
         stat = connect();
         if (stat) {
-            pIHyperCubeClientCore->onConnect();
             setupConnection();
             connected = true;
+            pIHyperCubeClientCore->onConnect();
         }
         eventDisconnectedFromServer.reset();
 
@@ -427,7 +427,7 @@ bool HKClientCore::SignallingObject::connectIfNotConnected(void)
 
     // do a periodic ping to server. This will start the localPingAckTimer and the ack will stop it
     if (connected) localPing(true, "Connection status ping");
-    
+
     #endif
 
     return stat;
@@ -536,9 +536,11 @@ bool HKClientCore::SignallingObject::processSigMsgJson(const Packet* ppacket)
 
         switch (hyperCubeCommand.command) {
             case HYPERCUBECOMMANDS::CONNECTIONINFOACK:
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received subscribeAck" + logLineData, 0);
                 msgProcessed = onConnectionInfoAck(hyperCubeCommand);
                 break;
             case HYPERCUBECOMMANDS::CREATEGROUPACK:
+                LOG_INFO("HKClientCore::SignallingObject::processSigMsgJson()", "received subscribeAck" + logLineData, 0);
                 msgProcessed = onCreateGroupAck(hyperCubeCommand);
                 break;
             case HYPERCUBECOMMANDS::SUBSCRIBEACK:
