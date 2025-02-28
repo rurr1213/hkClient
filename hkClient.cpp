@@ -698,6 +698,16 @@ bool HKClientCore::SignallingObject::createGroup(std::string _groupName)
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
 }
 
+bool HKClientCore::SignallingObject::destroyGroup(std::string _groupName)
+{
+    GroupInfo groupInfo;
+    groupInfo.groupName = _groupName;
+    groupInfo.creatorConnectionInfo = connectionInfo;
+    std::string info = groupInfo.groupName + ", " + groupInfo.uuid;
+    LOG_INFO("HKClientCore::createGroup()", info, 0);
+    return sendCmdOut(HYPERCUBECOMMANDS::DESTROYGROUP, groupInfo);
+}
+
 bool HKClientCore::SignallingObject::createGroup(const GroupInfo& _rgroupInfo)
 {
     GroupInfo groupInfo = _rgroupInfo;
@@ -705,6 +715,15 @@ bool HKClientCore::SignallingObject::createGroup(const GroupInfo& _rgroupInfo)
     std::string info = _rgroupInfo.groupName + ", " + _rgroupInfo.uuid;
     LOG_INFO("HKClientCore::createGroup()", info, 0);
     return sendCmdOut(HYPERCUBECOMMANDS::CREATEGROUP, groupInfo);
+}
+
+bool HKClientCore::SignallingObject::destroyGroup(const GroupInfo& _rgroupInfo)
+{
+    GroupInfo groupInfo = _rgroupInfo;
+    groupInfo.creatorConnectionInfo = connectionInfo;
+    std::string info = _rgroupInfo.groupName + ", " + _rgroupInfo.uuid;
+    LOG_INFO("HKClientCore::createGroup()", info, 0);
+    return sendCmdOut(HYPERCUBECOMMANDS::DESTROYGROUP, groupInfo);
 }
 
 bool HKClientCore::SignallingObject::createDefaultGroup(void)

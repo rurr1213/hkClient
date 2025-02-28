@@ -68,6 +68,7 @@ class HKDeviceMgr : public IHKDeviceMgr
         bool publishAck(PublishInfo& publishInfo, std::string response);
         bool waitForPublishAck(std::string groupName, UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
+        bool destroyGroup(const ClientGroupInfo clientGroupInfo);
         bool sendEcho(std::string data);
         bool remotePing(void);
         bool isConnected(void);

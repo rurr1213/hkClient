@@ -203,8 +203,10 @@ class HKClientCore : IHKClientCore
 
             bool subscribe(std::string _groupName);
             bool unsubscribe(std::string _groupName);
-            bool createGroup(const GroupInfo& _rgroupName);
+            bool createGroup(const GroupInfo&);
             bool createGroup(const std::string _groupName);
+            bool destroyGroup(const GroupInfo&);
+            bool destroyGroup(const std::string _groupName);
             bool echoData(std::string data = "");
             bool isConnected(void) { return connected; }
             bool localPing(bool ack = false, std::string data = "localPingFromClient");
@@ -269,7 +271,7 @@ public:
 	virtual bool onClosedForDataEvent(void);
 
     bool createGroup(const GroupInfo& _groupInfo) { return signallingObject.createGroup(_groupInfo);}
-//    bool createGroup(const std::string _groupName) { return signallingObject.createGroup(_groupName);}
+    bool destroyGroup(const GroupInfo& _groupInfo) { return signallingObject.destroyGroup(_groupInfo);}
     bool sendMsg(Msg& msg) { return sendMsgOut(msg);}
     bool sendEcho(std::string data = "") { return signallingObject.echoData(data); }
     bool isConnected(void) { return signallingObject.isConnected(); }

@@ -62,6 +62,13 @@ bool HKDeviceMgr::createGroup(const ClientGroupInfo clientGroupInfo)
     return callHKClientFunc(pHKDevice, &HKDevice::createGroup, groupInfo);
 }
 
+bool HKDeviceMgr::destroyGroup(const ClientGroupInfo clientGroupInfo)
+{
+    GroupInfo groupInfo;
+    groupInfo.groupName = clientGroupInfo.groupName;
+    return callHKClientFunc(pHKDevice, &HKDevice::destroyGroup, groupInfo);
+}
+
 bool HKDeviceMgr::sendEcho(std::string data) {
     data = clientConnectionInfo.displayName + " " + data;
     return callHKClientFunc(pHKDevice, &HKDevice::sendEcho, data);
