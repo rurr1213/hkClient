@@ -191,12 +191,12 @@ bool HKDeviceMgr::processCmdMsgJson(MsgContext& msgContext)
 	return true;
 }
 
-UUIDString HKDeviceMgr::publish(std::string _groupName, std::string _data)
+UUIDString HKDeviceMgr::publish(std::string _groupName, std::string _data, bool ack)
 {
     PublishInfo publishInfo;
     publishInfo.groupName = _groupName;
     publishInfo.publishData = _data;
-    if (!callHKClientFunc(pHKDevice, &HKDevice::publish, publishInfo)) {
+    if (!callHKClientFunc(pHKDevice, &HKDevice::publish, publishInfo, ack)) {
         return NULL;
     }
     return publishInfo.uuid;

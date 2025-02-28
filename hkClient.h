@@ -251,7 +251,7 @@ public:
         SOCKET getSocket(void) { return client.getSocket(); }
         void setConnectionInfo(const ConnectionInfo& rconnectionInfo) { signallingObject.setConnectionInfo(rconnectionInfo); }
         void setDefaultGroupInfo(const GroupInfo& rgroupInfo) { signallingObject.setDefaultGroupInfo(rgroupInfo); }
-        bool publish(PublishInfo& publishInfo);
+        bool publish(PublishInfo& publishInfo, bool ack = false);
         bool publishAck(PublishInfoAck& publishInfoAck);
 };
 
@@ -275,5 +275,5 @@ public:
     bool isConnected(void) { return signallingObject.isConnected(); }
     bool localPing(void) { return signallingObject.localPing(); }
     bool remotePing(void) { return signallingObject.remotePing(); }
-    bool publish(PublishInfo& publishInfo) ;
+    bool publish(PublishInfo& publishInfo, bool ack = false) ;
 };

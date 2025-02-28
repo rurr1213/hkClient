@@ -883,10 +883,10 @@ bool HKClientCore::recvMsg(Msg& msg) {
 }
 */
 
-bool HKClientCore::publish(PublishInfo& publishInfo)
+bool HKClientCore::publish(PublishInfo& publishInfo, bool ack)
 {
     HyperCubeCommand hypeCubeCommand(HYPERCUBECOMMANDS::PUBLISHINFO, publishInfo.to_json(), true);
-    hypeCubeCommand.ack = false;
+    hypeCubeCommand.ack = ack;
     MsgCmd msgCmd(hypeCubeCommand.to_json().dump());
     return sendMsgOut(msgCmd);
 }
@@ -1116,9 +1116,9 @@ HKClient::~HKClient()
 {
 }
 
-bool HKClient::publish(PublishInfo& publishInfo)
+bool HKClient::publish(PublishInfo& publishInfo, bool ack)
 {
-    return HKClientCore::publish(publishInfo);
+    return HKClientCore::publish(publishInfo, ack);
 }
 
 

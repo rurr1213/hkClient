@@ -64,7 +64,7 @@ class HKDeviceMgr : public IHKDeviceMgr
 
         bool subscribe(std::string _groupName);
         bool unsubscribe(std::string _groupName);
-        UUIDString publish(std::string _groupName, std::string data);
+        UUIDString publish(std::string _groupName, std::string data, bool ack = false);
         bool publishAck(PublishInfo& publishInfo, std::string response);
         bool waitForPublishAck(std::string groupName, UUIDString _uuid, std::string& ackData);
         bool createGroup(const ClientGroupInfo clientGroupInfo);
