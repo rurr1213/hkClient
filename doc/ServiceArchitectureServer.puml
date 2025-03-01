@@ -1,0 +1,59 @@
+@startuml
+
+interface hkAPI {
+    +publish()
+    +publishAck()
+    +subscribe()
+    +unsubscribe()
+    +createGroup()
+    +destroyGroup()
+}
+
+interface hkIServerService {
+    +init()
+    +deinit()
+    +onPublishInfo(publishInfo)
+}
+
+interface hkIClientService {
+    +init()
+    +deinit()
+    +onPublishInfo(publishInfo)
+}
+
+hkIServerService --> hkAPI : uses
+hkIClientService --> hkAPI : uses
+
+
+class hkServerServiceController {
+    +init()
+    +deinit()
+    +register(groupName: string, serviceCode: ServerServiceCode)
+    +onPublishInfo(publishInfo)
+    -serviceMap: Map<string, hkIServiceServer>
+}
+
+class hkClientServiceController {
+    +init()
+    +deinit()
+    +register(groupName: string, serviceCode: ServerServiceCode)
+    +onPublishInfo(publishInfo)
+    -serviceMap: Map<string, hkIServiceServer>
+}
+
+class ServerServiceObject << (S, #FF7700) >> extends hkIServerService {
+    +onPublishInfo(publishInfo)
+}
+
+class ClientServiceObject << (C, #77FF77) >> extends hkIClientService {
+    +onPublishInfo(publishInfo)
+}
+
+
+hkIServerService <|-- ServerServiceObject
+hkIClientService <|-- ClientServiceObject
+
+hkServerServiceController o-- hkIServerService : serviceMap
+hkClientServiceController o-- hkIClientService : serviceMap
+
+@enduml

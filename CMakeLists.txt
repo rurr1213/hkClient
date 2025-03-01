@@ -23,10 +23,16 @@ set(EXE_SOURCE_FILES
 
 add_subdirectory(genCppTools)
 add_subdirectory(CommonCppDartCode)
+add_subdirectory(Service)
 
 add_subdirectory(tests)
 
-add_library(hkClientLib STATIC ${LIB_SOURCE_FILES} $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}genCppToolsObjects> $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}CommonCppDartCodeObjects>)
+add_library(
+    hkClientLib STATIC ${LIB_SOURCE_FILES}
+    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}genCppToolsObjects>
+    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}CommonCppDartCodeObjects>
+    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}ServiceObjects>
+)
 
 # Include directories for the hkClient library
 target_include_directories(hkClientLib PUBLIC
@@ -36,6 +42,7 @@ target_include_directories(hkClientLib PUBLIC
     CommonCppDartCode/cpp
     CommonCppDartCode/cpp/json
     CommonCppDartCode/Messages
+    Service
 )
 
 # Link libraries for the hkClient library
@@ -62,6 +69,7 @@ target_include_directories(hkClientAppLinux PUBLIC
     CommonCppDartCode/cpp
     CommonCppDartCode/cpp/json
     CommonCppDartCode/Messages
+    Service
 )
 
 target_link_libraries(hkClientAppLinux
