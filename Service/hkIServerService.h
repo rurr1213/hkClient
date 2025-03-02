@@ -1,20 +1,20 @@
 #pragma once
 #include "hkAPI.h"
 
-class hkIServerService {
+class HKIServerService {
 public:
-    hkIServerService(hkAPI& api) : api(api) {}
-    ~hkIServerService() {}
-    virtual bool init() = 0;
-    virtual bool deinit() = 0;
+    HKIServerService(HKIAPI& api) : hkAPI(api) {}
+    ~HKIServerService() {}
+    virtual bool init(void) = 0;
+    virtual bool deinit(void) = 0;
     virtual bool onPublishInfo(PublishInfo& publishInfo) = 0;
 protected:
-    hkAPI& api;
+    HKIAPI& hkAPI;
 };
 
-class hkServerServiceDefault : public hkIServerService {
+class hkServerServiceDefault : public HKIServerService {
     public:
-        hkServerServiceDefault(hkAPI& api) : hkIServerService(api) {}
+        hkServerServiceDefault(HKIAPI& api) : HKIServerService(api) {}
         ~hkServerServiceDefault() {}
         bool init() { return true;};
         bool deinit() { return true;};

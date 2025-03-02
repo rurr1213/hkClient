@@ -11,17 +11,17 @@ enum class ClientServiceCode {
     // Add other service codes as needed
 };
 
-class hkClientServiceController {
-    hkAPI& hkApi;
+class HKClientServiceController {
+    HKIAPI& hkApi;
 public:
-    hkClientServiceController(hkAPI& _hkApi) : hkApi(_hkApi) {}
-    ~hkClientServiceController() {}
+    HKClientServiceController(HKIAPI& _hkApi) : hkApi(_hkApi) {}
+    ~HKClientServiceController() {}
     bool init();
     bool deinit();
     bool registerService(const std::string& groupName, ClientServiceCode serviceCode);
     bool onPublishInfo(PublishInfo& publishInfo);
-    hkIClientService* createService(ClientServiceCode serviceCode);
+    HKIClientService* createService(ClientServiceCode serviceCode);
 
 private:
-    std::map<std::string, hkIClientService*> serviceMap;
+    std::map<std::string, HKIClientService*> serviceMap;
 };

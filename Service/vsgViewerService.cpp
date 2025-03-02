@@ -1,11 +1,21 @@
 #include "hkDeviceMgr.h"
 #include "processManager.h"
 #include "vsgViewerService.h"
+#include "Logger.h"
 
-
-VsgViewerService::VsgViewerService(HKDeviceMgr& _hkDeviceMgr) : hkDeviceMgr(_hkDeviceMgr),
+VsgViewerService::VsgViewerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI),
     vsgViewerProcessManager(VSGVIEWERAPPPATH, VSGVIEWERARGS)
 {
+}
+
+bool VsgViewerService::init(void)
+{
+    return runVsgViewer();
+}
+
+bool VsgViewerService::deinit(void)
+{
+    return true;
 }
 
 bool VsgViewerService::runVsgViewer(void)
@@ -30,5 +40,21 @@ bool VsgViewerService::process(void)
     while (vsgViewerProcessManager.receive(readMsg)) {
         std::cout << "<<" << readMsg << std::endl;
     }
+    return true;
+}
+
+bool VsgViewerService::onPublishInfo(PublishInfo& publishInfo)
+{
+    std::string command = publishInfo.publishData;
+    std::string response = "vsgViewerService";
+    bool waitForResponse = publishInfo.ack;
+
+    if (command == "@rv") {
+        bool runStatus = runVsgViewer();
+        hkAPI.publishAck(publishInfo, response);
+        LOG_DBG("HKShell::onPublishInfo() ack: ", response.substr(0, 60), 0);
+        LOG_INFO("HKShell::onPublishInfo() RUNNING RV ", command, 0);
+    }
+
     return true;
 }

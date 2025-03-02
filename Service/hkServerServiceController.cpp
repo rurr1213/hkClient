@@ -1,42 +1,87 @@
 #include "hkIServerService.h"
 #include "hkServerServiceController.h"
 
-bool hkServerServiceController::init() {
+#include "vsgViewerService.h"
+#include "bashRemoteServer.h"
+
+bool HKServerServiceController::init() {
     // Initialization logic
     return true;
 }
 
-bool hkServerServiceController::deinit() {
-    // Deinitialization logic
+bool HKServerServiceController::deinit() {
+    deinitAllGroupServices();
+
+    for (auto& service : serviceMap) {
+        service.second.reset();
+    }
+
+    serviceMap.clear();
     return true;
 }
 
-bool hkServerServiceController::registerService(const std::string& groupName, ServerServiceCode serviceCode) {
-    hkIServerService* service = createService(serviceCode);
-    if (service) {
-        serviceMap[groupName] = service;
+bool HKServerServiceController::registerGroupService(const std::string& groupName, ServerServiceCode serviceCode) {
+    std::shared_ptr<HKIServerService> pservice = createService(serviceCode);
+    if (pservice) {
+        serviceMap[groupName] = pservice;
         return true;
     }
     return false;
 }
 
-hkIServerService* hkServerServiceController::createService(ServerServiceCode serviceCode) {
-    // Factory method to create service objects based on service code
-    switch (serviceCode) {
-        case ServerServiceCode::SERVICE_A:
-            return new hkServerServiceDefault(hkApi);
-        case ServerServiceCode::SERVICE_B:
-            return new hkServerServiceDefault(hkApi);
-        // Add other cases as needed
-        default:
-            return nullptr;
+std::shared_ptr<HKIServerService> HKServerServiceController::getService(std::string groupName) {
+    if (serviceMap.find(groupName) != serviceMap.end()) {
+        return serviceMap[groupName];
     }
+    return nullptr;
 }
 
-bool hkServerServiceController::onPublishInfo(PublishInfo& publishInfo) {
+bool HKServerServiceController::initGroupService(std::string groupName) {
+    if (serviceMap.find(groupName) != serviceMap.end()) {
+        return serviceMap[groupName]->init();
+    }
+    return false;
+}
+
+bool HKServerServiceController::deinitGroupService(std::string groupName) {
+    if (serviceMap.find(groupName) != serviceMap.end()) {
+        return serviceMap[groupName]->deinit();
+    }
+    return false;
+}
+
+bool HKServerServiceController::deinitAllGroupServices(void) {
+    for (auto& service : serviceMap) {
+        service.second->deinit();
+    }
+    return true;
+}
+
+
+bool HKServerServiceController::onPublishInfo(PublishInfo& publishInfo) {
     std::string groupName = publishInfo.groupName;
     if (serviceMap.find(groupName) != serviceMap.end()) {
         return serviceMap[groupName]->onPublishInfo(publishInfo);
     }
     return false;
 }
+
+
+std::shared_ptr<HKIServerService> HKServerServiceController::createService(ServerServiceCode serviceCode) {
+
+    // Factory method to create service objects based on service code
+    std::shared_ptr<HKIServerService> phkIServerService;
+    switch (serviceCode) {
+        case ServerServiceCode::SERVICE_VSGVIEWER:
+            phkIServerService = std::make_shared<VsgViewerService>(hkApi);
+            break;
+        case ServerServiceCode::SERVICE_BASH:
+            phkIServerService = std::make_shared<BashRemoteService>(hkApi);
+            break;
+        case ServerServiceCode::SERVICE_NONE:
+        default:
+            break;
+    }
+    return phkIServerService;
+}
+

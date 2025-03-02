@@ -9,11 +9,11 @@
 #include "msgJsonCmdPayload.h"
 #include "sthread.h"
 #include "groupActivityData.h"
+#include "hkAPI.h"
 
 class HKDevice;
-typedef std::string UUIDString;
 
-class HKDeviceMgr : public IHKDeviceMgr
+class HKDeviceMgr : public IHKDeviceMgr, public HKIAPI
 {
 
     std::unique_ptr<HKDevice> pHKDevice;
@@ -40,11 +40,6 @@ class HKDeviceMgr : public IHKDeviceMgr
     } serviceActivity;
 
     public:
-        class ClientGroupInfo {
-        public:
-            std::string groupName = "none";
-        };
-
         class ClientConnectionInfo {
         public:
             std::string connectionName = "undefined";
