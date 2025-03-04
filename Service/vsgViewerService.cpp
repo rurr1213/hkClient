@@ -10,11 +10,21 @@ VsgViewerService::VsgViewerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI),
 
 bool VsgViewerService::init(void)
 {
+    bool stat = setupGroup();
+    if (!stat) {
+        LOG_ERROR("VsgViewerService::init()", "Failed to create group " + registeredGroupName, 0);
+        return false;
+    }
     return runVsgViewer();
 }
 
 bool VsgViewerService::deinit(void)
 {
+    bool stat = unSetupGroup();
+    if (!stat) {
+        LOG_ERROR("VsgViewerService::deinit()", "Failed to destroy group " + registeredGroupName, 0);
+        return false;
+    }
     return true;
 }
 

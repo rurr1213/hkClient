@@ -1,6 +1,7 @@
 #include "hkIServerService.h"
 #include "hkServerServiceController.h"
 
+#include "hkShellServerService.h"
 #include "vsgViewerService.h"
 #include "bashRemoteServer.h"
 
@@ -24,6 +25,7 @@ bool HKServerServiceController::registerGroupService(const std::string& groupNam
     std::shared_ptr<HKIServerService> pservice = createService(serviceCode);
     if (pservice) {
         serviceMap[groupName] = pservice;
+        pservice->registeredGroupName = groupName;
         return true;
     }
     return false;
@@ -72,6 +74,9 @@ std::shared_ptr<HKIServerService> HKServerServiceController::createService(Serve
     // Factory method to create service objects based on service code
     std::shared_ptr<HKIServerService> phkIServerService;
     switch (serviceCode) {
+        case ServerServiceCode::SERVICE_HKSHELL:
+            phkIServerService = std::make_shared<HKShellServerService>(hkApi);
+            break;
         case ServerServiceCode::SERVICE_VSGVIEWER:
             phkIServerService = std::make_shared<VsgViewerService>(hkApi);
             break;

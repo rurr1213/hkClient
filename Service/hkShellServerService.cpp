@@ -4,21 +4,31 @@
 #include "Logger.h"
 #include <sstream>
 
-hkShellServerService::hkShellServerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI)
+HKShellServerService::HKShellServerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI)
 {
 }
 
-bool hkShellServerService::init(void)
+bool HKShellServerService::init(void)
 {
+    bool stat = setupGroup();
+    if (!stat) {
+        LOG_ERROR("HKShellServerService::init()", "Failed to create group " + registeredGroupName, 0);
+        return false;
+    }
     return true;
 }
 
-bool hkShellServerService::deinit(void)
+bool HKShellServerService::deinit(void)
 {
+    bool stat = unSetupGroup();
+    if (!stat) {
+        LOG_ERROR("HKShellServerService::deinit()", "Failed to destroy group " + registeredGroupName, 0);
+        return false;
+    }
     return true;
 }
 
-bool hkShellServerService::onPublishInfo(PublishInfo& publishInfo)
+bool HKShellServerService::onPublishInfo(PublishInfo& publishInfo)
 {
     std::string command = publishInfo.publishData;
     std::string response = "@Shell";
@@ -31,7 +41,7 @@ bool hkShellServerService::onPublishInfo(PublishInfo& publishInfo)
     return true;
 }
 
-bool hkShellServerService::processCommand(PublishInfo& publishInfo, const std::string& command)
+bool HKShellServerService::processCommand(PublishInfo& publishInfo, const std::string& command)
 {
     // Parse the command into words
     std::istringstream iss(command);

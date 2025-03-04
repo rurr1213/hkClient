@@ -3,6 +3,7 @@
 
 class HKIServerService {
 public:
+    std::string registeredGroupName;
     HKIServerService(HKIAPI& api) : hkAPI(api) {}
     ~HKIServerService() {}
     virtual bool init(void) = 0;
@@ -10,6 +11,8 @@ public:
     virtual bool onPublishInfo(PublishInfo& publishInfo) = 0;
 protected:
     HKIAPI& hkAPI;
+    bool setupGroup(void);
+    bool unSetupGroup(void);
 };
 
 class hkServerServiceDefault : public HKIServerService {
@@ -20,3 +23,4 @@ class hkServerServiceDefault : public HKIServerService {
         bool deinit() { return true;};
         bool onPublishInfo(PublishInfo& publishInfo) { return true;};
 };
+
