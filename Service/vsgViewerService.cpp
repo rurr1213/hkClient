@@ -61,10 +61,17 @@ bool VsgViewerService::onPublishInfo(PublishInfo& publishInfo)
 
     if (command == "@rv") {
         bool runStatus = runVsgViewer();
-        hkAPI.publishAck(publishInfo, response);
         LOG_DBG("HKShell::onPublishInfo() ack: ", response.substr(0, 60), 0);
         LOG_INFO("HKShell::onPublishInfo() RUNNING RV ", command, 0);
+        std::string response;
+        if (runStatus) {
+            response = "vsgViewerService@ started";
+        } else {
+            response = "vsgViewerService@ failed to start";
+        }
+        hkAPI.publishAck(publishInfo, response);
+        return true;
     }
 
-    return true;
+    return send(command);
 }
