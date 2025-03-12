@@ -875,6 +875,7 @@ bool HKClientCore::onReceivedData(void)
 
 
 bool HKClientCore::sendMsgOut(Msg& msg) {
+    if (!signallingObject.isConnected()) return false;
     Packet::UniquePtr ppacket = 0;
     ppacket = Packet::create();
     mserdes.msgToPacket(msg, ppacket);

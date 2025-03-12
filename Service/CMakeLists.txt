@@ -22,6 +22,7 @@ set(SOURCES
     hkShellServerService.cpp
     hkServerServiceController.cpp
     vsgViewerService.cpp
+    hkDirService.cpp
 )
 
 # Create an OBJECT library

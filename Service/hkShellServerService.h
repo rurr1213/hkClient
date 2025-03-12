@@ -10,5 +10,5 @@ class HKShellServerService : public HKIServerService {
         ~HKShellServerService() {}
         bool init(void) override;
         bool deinit(void) override;
-        bool onPublishInfo(PublishInfo& publishInfo);
+        bool onPublishInfo(PublishInfo& publishInfo) override;
 };

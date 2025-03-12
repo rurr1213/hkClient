@@ -13,15 +13,13 @@ class VsgViewerService : public HKIServerService  {
 
     ProcessManager vsgViewerProcessManager;
     bool runVsgViewer(void);
-    
+
  public:
 
     const std::string GROUPNAME = "VsgViewerServiceGroup";
 
     VsgViewerService(HKIAPI&);
     ~VsgViewerService() {}
-    bool init(void);
-    bool deinit(void);
     bool onPublishInfo(PublishInfo& publishInfo);
     bool process(void);
     bool send(const std::string& message);

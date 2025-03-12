@@ -6,13 +6,11 @@ public:
     std::string registeredGroupName;
     HKIServerService(HKIAPI& api) : hkAPI(api) {}
     ~HKIServerService() {}
-    virtual bool init(void) = 0;
-    virtual bool deinit(void) = 0;
+    virtual bool init(void);
+    virtual bool deinit(void);
     virtual bool onPublishInfo(PublishInfo& publishInfo) = 0;
 protected:
     HKIAPI& hkAPI;
-    bool setupGroup(void);
-    bool unSetupGroup(void);
 };
 
 class hkServerServiceDefault : public HKIServerService {

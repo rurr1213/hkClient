@@ -2,7 +2,7 @@
 #include "hkIServerService.h"
 #include "Logger.h"
 
-bool HKIServerService::setupGroup(void) {
+bool HKIServerService::init(void) {
     ClientGroupInfo clientGroupInfo;
     clientGroupInfo.groupName = registeredGroupName;
 
@@ -22,7 +22,7 @@ bool HKIServerService::setupGroup(void) {
     return true;
 }
 
-bool HKIServerService::unSetupGroup(void) {
+bool HKIServerService::deinit(void) {
     // subcribe to the bashService group
     bool stat = hkAPI.unsubscribe(registeredGroupName);
     if (!stat) {
@@ -38,6 +38,6 @@ bool HKIServerService::unSetupGroup(void) {
         LOG_ERROR("HKIServerService::unSetupGroup()", "Failed to create group " + registeredGroupName, 0);
         return false;
     }
-    
+
     return true;
 }

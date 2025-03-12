@@ -10,22 +10,12 @@ HKShellServerService::HKShellServerService(HKIAPI& hkIAPI) : HKIServerService(hk
 
 bool HKShellServerService::init(void)
 {
-    bool stat = setupGroup();
-    if (!stat) {
-        LOG_ERROR("HKShellServerService::init()", "Failed to create group " + registeredGroupName, 0);
-        return false;
-    }
-    return true;
+    return HKIServerService::init();
 }
 
 bool HKShellServerService::deinit(void)
 {
-    bool stat = unSetupGroup();
-    if (!stat) {
-        LOG_ERROR("HKShellServerService::deinit()", "Failed to destroy group " + registeredGroupName, 0);
-        return false;
-    }
-    return true;
+    return HKIServerService::deinit();
 }
 
 bool HKShellServerService::onPublishInfo(PublishInfo& publishInfo)

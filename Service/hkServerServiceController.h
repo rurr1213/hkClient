@@ -10,7 +10,8 @@ enum class ServerServiceCode {
     SERVICE_NONE,
     SERVICE_HKSHELL,
     SERVICE_VSGVIEWER,
-    SERVICE_BASH
+    SERVICE_BASH,
+    SERVICE_HKDIR
 };
 
 
@@ -51,6 +52,6 @@ std::shared_ptr<ObjectClass> registerAndInitGroupService(HKServerServiceControll
         LOG_ERROR("HKShell::init()", "Failed to get " + groupName, 0);
         return nullptr;
     }
-    
+
     return pservice;
 }

@@ -4,6 +4,7 @@
 #include "hkShellServerService.h"
 #include "vsgViewerService.h"
 #include "bashRemoteServer.h"
+#include "hkDirService.h"
 
 bool HKServerServiceController::init() {
     // Initialization logic
@@ -82,6 +83,9 @@ std::shared_ptr<HKIServerService> HKServerServiceController::createService(Serve
             break;
         case ServerServiceCode::SERVICE_BASH:
             phkIServerService = std::make_shared<BashRemoteService>(hkApi);
+            break;
+        case ServerServiceCode::SERVICE_HKDIR:
+            phkIServerService = std::make_shared<HKDirService>(hkApi);
             break;
         case ServerServiceCode::SERVICE_NONE:
         default:
