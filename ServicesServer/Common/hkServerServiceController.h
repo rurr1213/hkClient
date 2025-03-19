@@ -34,24 +34,19 @@ private:
 };
 
 template <typename ObjectClass>
-std::shared_ptr<ObjectClass> registerAndInitGroupService(HKServerServiceController& hkServerServiceController, const std::string groupName, ServerServiceCode serviceCode)
+bool registerAndInitGroupService(HKServerServiceController& hkServerServiceController, const std::string groupName, ServerServiceCode serviceCode)
 {
     bool status = hkServerServiceController.registerGroupService(groupName, serviceCode);
     if(!status) {
         LOG_ERROR("HKShell::init()", "Failed to register " + groupName, 0);
-        return nullptr;
+        return false;
     }
     status = hkServerServiceController.initGroupService(groupName);
     if(!status) {
         LOG_ERROR("HKShell::init()", "Failed to init " + groupName, 0);
-        return nullptr;
+        return false;
     }
 
-    std::shared_ptr<ObjectClass> pservice = std::dynamic_pointer_cast<ObjectClass>(hkServerServiceController.getService(groupName));
-    if (!pservice) {
-        LOG_ERROR("HKShell::init()", "Failed to get " + groupName, 0);
-        return nullptr;
-    }
 
-    return pservice;
+    return true;
 }
