@@ -18,14 +18,9 @@ include_directories(
 # Source files
 set(SOURCES
     hkClientServiceController.cpp
-    hkIServerService.cpp
-    hkShellServerService.cpp
-    hkServerServiceController.cpp
-    vsgViewerService.cpp
-    hkDirService.cpp
 )
 
 # Create an OBJECT library
-set(LIB_NAME "${ROOT_PROJECT_NAME}ServiceObjects")
+set(LIB_NAME "${ROOT_PROJECT_NAME}ServicesClientObjects")
 add_library(${LIB_NAME} OBJECT ${SOURCES})
 

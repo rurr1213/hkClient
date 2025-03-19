@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.10)
 
 project(hkClient)
@@ -23,7 +22,8 @@ set(EXE_SOURCE_FILES
 
 add_subdirectory(genCppTools)
 add_subdirectory(CommonCppDartCode)
-add_subdirectory(Service)
+add_subdirectory(ServicesClient)
+add_subdirectory(ServicesServer)
 
 add_subdirectory(tests)
 
@@ -31,7 +31,8 @@ add_library(
     hkClientLib STATIC ${LIB_SOURCE_FILES}
     $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}genCppToolsObjects>
     $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}CommonCppDartCodeObjects>
-    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}ServiceObjects>
+    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}ServicesClientObjects>
+    $<TARGET_OBJECTS:${ROOT_PROJECT_NAME}ServicesServerObjects>
 )
 
 # Include directories for the hkClient library
@@ -42,7 +43,8 @@ target_include_directories(hkClientLib PUBLIC
     CommonCppDartCode/cpp
     CommonCppDartCode/cpp/json
     CommonCppDartCode/Messages
-    Service
+    ServicesClient
+    ServicesServer
 )
 
 # Link libraries for the hkClient library
@@ -69,7 +71,8 @@ target_include_directories(hkClientAppLinux PUBLIC
     CommonCppDartCode/cpp
     CommonCppDartCode/cpp/json
     CommonCppDartCode/Messages
-    Service
+    ServicesClient
+    ServicesServer
 )
 
 target_link_libraries(hkClientAppLinux

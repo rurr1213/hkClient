@@ -3,7 +3,7 @@
 
 #include "hkShellServerService.h"
 #include "vsgViewerService.h"
-#include "bashRemoteServer.h"
+#include "bashRemoteService.h"
 #include "hkDirService.h"
 
 bool HKServerServiceController::init() {
