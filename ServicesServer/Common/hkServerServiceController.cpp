@@ -22,7 +22,7 @@ bool HKServerServiceController::deinit() {
     return true;
 }
 
-bool HKServerServiceController::createGroupService(const std::string& groupName, ServerServiceCode serviceCode) {
+bool HKServerServiceController::registerGroupService(const std::string& groupName, ServerServiceCode serviceCode) {
     std::shared_ptr<HKIServerService> pservice = createService(serviceCode);
     if (pservice) {
         serviceMap[groupName] = pservice;

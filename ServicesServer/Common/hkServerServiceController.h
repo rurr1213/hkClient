@@ -22,7 +22,7 @@ public:
     ~HKServerServiceController() {}
     bool init();
     bool deinit();
-    bool createGroupService(const std::string& groupName, ServerServiceCode serviceCode);
+    bool registerGroupService(const std::string& groupName, ServerServiceCode serviceCode);
     bool onPublishInfo(PublishInfo& publishInfo);
     std::shared_ptr<HKIServerService> createService(ServerServiceCode serviceCode);
     std::shared_ptr<HKIServerService> getService(std::string groupName);
