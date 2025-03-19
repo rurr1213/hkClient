@@ -22,8 +22,7 @@ bool HKServerServiceController::deinit() {
     return true;
 }
 
-bool HKServerServiceController::registerGroupService(const std::string& groupName, ServerServiceCode serviceCode) {
-    std::shared_ptr<HKIServerService> pservice = createService(serviceCode);
+bool HKServerServiceController::registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerService> pservice) {
     if (pservice) {
         serviceMap[groupName] = pservice;
         pservice->registeredGroupName = groupName;
@@ -38,7 +37,7 @@ std::shared_ptr<HKIServerService> HKServerServiceController::getService(std::str
     }
     return nullptr;
 }
-
+/*
 bool HKServerServiceController::initGroupService(std::string groupName) {
     if (serviceMap.find(groupName) != serviceMap.end()) {
         return serviceMap[groupName]->init();
@@ -52,7 +51,7 @@ bool HKServerServiceController::deinitGroupService(std::string groupName) {
     }
     return false;
 }
-
+*/
 bool HKServerServiceController::initAllGroupServices(void) {
     for (auto& service : serviceMap) {
         service.second->init();
@@ -76,28 +75,4 @@ bool HKServerServiceController::onPublishInfo(PublishInfo& publishInfo) {
     return false;
 }
 
-
-std::shared_ptr<HKIServerService> HKServerServiceController::createService(ServerServiceCode serviceCode) {
-
-    // Factory method to create service objects based on service code
-    std::shared_ptr<HKIServerService> phkIServerService;
-    switch (serviceCode) {
-        case ServerServiceCode::SERVICE_HKSHELL:
-            phkIServerService = std::make_shared<HKShellServerService>(hkApi);
-            break;
-        case ServerServiceCode::SERVICE_VSGVIEWER:
-            phkIServerService = std::make_shared<VsgViewerService>(hkApi);
-            break;
-        case ServerServiceCode::SERVICE_BASH:
-            phkIServerService = std::make_shared<BashRemoteService>(hkApi);
-            break;
-        case ServerServiceCode::SERVICE_HKDIR:
-            phkIServerService = std::make_shared<HKDirService>(hkApi);
-            break;
-        case ServerServiceCode::SERVICE_NONE:
-        default:
-            break;
-    }
-    return phkIServerService;
-}
 
