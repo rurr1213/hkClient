@@ -4,7 +4,7 @@
 
 #include "hkDeviceMgr.h"
 #include "bashProcess.h"
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 #include "hkAPI.h"
 
 class BashRemoteServer {
@@ -18,7 +18,7 @@ class BashRemoteServer {
         std::string prompt();
 };
 
-class BashRemoteService : public HKIServerService  {
+class BashRemoteService : public HKIServerServiceBase  {
     HKIAPI& hkAPI;
 
     private:

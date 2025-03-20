@@ -4,12 +4,12 @@
 #include <sys/types.h>
 #include "hkDeviceMgr.h"
 #include "processManager.h"
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 
 #define VSGVIEWERAPPPATH "/home/ravi/dev/photon/vsgviewer/rv"
 #define VSGVIEWERARGS   std::vector<std::string>{}
 
-class VsgViewerService : public HKIServerService  {
+class VsgViewerService : public HKIServerServiceBase  {
 
     ProcessManager vsgViewerProcessManager;
     bool runVsgViewer(void);

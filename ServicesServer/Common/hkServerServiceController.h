@@ -2,7 +2,7 @@
 
 #include <map>
 #include <string>
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 #include "Messages.h"
 #include "Logger.h"
 
@@ -14,14 +14,12 @@ public:
     ~HKServerServiceController() {}
     bool init();
     bool deinit();
-    bool registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerService> pservice);
-    std::shared_ptr<HKIServerService> getService(std::string groupName);
+    bool registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice);
+    std::shared_ptr<HKIServerServiceBase> getService(std::string groupName);
     bool initAllGroupServices(void);
     bool deinitAllGroupServices(void);
     bool onPublishInfo(PublishInfo& publishInfo);
-//    bool initGroupService(std::string groupName);
-//    bool deinitGroupService(std::string groupName);
 
 private:
-    std::map<std::string, std::shared_ptr<HKIServerService>> serviceMap;
+    std::map<std::string, std::shared_ptr<HKIServerServiceBase>> serviceMap;
 };

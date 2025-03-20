@@ -4,18 +4,18 @@
 #include "Logger.h"
 #include <sstream>
 
-HKShellServerService::HKShellServerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI)
+HKShellServerService::HKShellServerService(HKIAPI& hkIAPI) : HKIServerServiceBase(hkIAPI)
 {
 }
 
 bool HKShellServerService::init(void)
 {
-    return HKIServerService::init();
+    return HKIServerServiceBase::init();
 }
 
 bool HKShellServerService::deinit(void)
 {
-    return HKIServerService::deinit();
+    return HKIServerServiceBase::deinit();
 }
 
 bool HKShellServerService::onPublishInfo(PublishInfo& publishInfo)

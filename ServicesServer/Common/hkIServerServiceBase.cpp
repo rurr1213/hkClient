@@ -1,8 +1,8 @@
 #include "hkAPI.h"
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 #include "Logger.h"
 
-bool HKIServerService::init(void) {
+bool HKIServerServiceBase::init(void) {
     ClientGroupInfo clientGroupInfo;
     clientGroupInfo.groupName = registeredGroupName;
 
@@ -22,7 +22,7 @@ bool HKIServerService::init(void) {
     return true;
 }
 
-bool HKIServerService::deinit(void) {
+bool HKIServerServiceBase::deinit(void) {
     // subcribe to the bashService group
     bool stat = hkAPI.unsubscribe(registeredGroupName);
     if (!stat) {

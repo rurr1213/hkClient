@@ -1,9 +1,9 @@
-#include "hkDeviceMgr.h"
-#include "processManager.h"
+//#include "hkDeviceMgr.h"
+//#include "processManager.h"
 #include "vsgViewerService.h"
 #include "Logger.h"
 
-VsgViewerService::VsgViewerService(HKIAPI& hkIAPI) : HKIServerService(hkIAPI),
+VsgViewerService::VsgViewerService(HKIAPI& hkIAPI) : HKIServerServiceBase(hkIAPI),
     vsgViewerProcessManager(VSGVIEWERAPPPATH, VSGVIEWERARGS)
 {
 }

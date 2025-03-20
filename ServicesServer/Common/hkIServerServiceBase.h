@@ -1,11 +1,11 @@
 #pragma once
 #include "hkAPI.h"
 
-class HKIServerService {
+class HKIServerServiceBase {
 public:
     std::string registeredGroupName;
-    HKIServerService(HKIAPI& api) : hkAPI(api) {}
-    ~HKIServerService() {}
+    HKIServerServiceBase(HKIAPI& api) : hkAPI(api) {}
+    ~HKIServerServiceBase() {}
     virtual bool init(void);
     virtual bool deinit(void);
     virtual bool onPublishInfo(PublishInfo& publishInfo) = 0;
@@ -13,9 +13,9 @@ protected:
     HKIAPI& hkAPI;
 };
 
-class hkServerServiceDefault : public HKIServerService {
+class hkServerServiceDefault : public HKIServerServiceBase {
     public:
-        hkServerServiceDefault(HKIAPI& api) : HKIServerService(api) {}
+        hkServerServiceDefault(HKIAPI& api) : HKIServerServiceBase(api) {}
         ~hkServerServiceDefault() {}
         bool init() { return true;};
         bool deinit() { return true;};

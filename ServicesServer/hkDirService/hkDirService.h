@@ -1,9 +1,9 @@
 #pragma once
 #include "hkAPI.h"
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 #include <string>
 
-class HKDirService : public HKIServerService
+class HKDirService : public HKIServerServiceBase
 {
     std::string getDirNodes(std::string path);
     std::string currentDir = "~/";

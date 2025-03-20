@@ -9,7 +9,7 @@
 
 using json = nlohmann::json;
 
-HKDirService::HKDirService(HKIAPI& api) : HKIServerService(api) {
+HKDirService::HKDirService(HKIAPI& api) : HKIServerServiceBase(api) {
 
 }
 

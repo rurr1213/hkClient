@@ -1,4 +1,4 @@
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 #include "hkServerServiceController.h"
 
 #include "hkShellServerService.h"
@@ -22,7 +22,7 @@ bool HKServerServiceController::deinit() {
     return true;
 }
 
-bool HKServerServiceController::registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerService> pservice) {
+bool HKServerServiceController::registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice) {
     if (pservice) {
         serviceMap[groupName] = pservice;
         pservice->registeredGroupName = groupName;
@@ -31,27 +31,13 @@ bool HKServerServiceController::registerGroupService(const std::string& groupNam
     return false;
 }
 
-std::shared_ptr<HKIServerService> HKServerServiceController::getService(std::string groupName) {
+std::shared_ptr<HKIServerServiceBase> HKServerServiceController::getService(std::string groupName) {
     if (serviceMap.find(groupName) != serviceMap.end()) {
         return serviceMap[groupName];
     }
     return nullptr;
 }
-/*
-bool HKServerServiceController::initGroupService(std::string groupName) {
-    if (serviceMap.find(groupName) != serviceMap.end()) {
-        return serviceMap[groupName]->init();
-    }
-    return false;
-}
 
-bool HKServerServiceController::deinitGroupService(std::string groupName) {
-    if (serviceMap.find(groupName) != serviceMap.end()) {
-        return serviceMap[groupName]->deinit();
-    }
-    return false;
-}
-*/
 bool HKServerServiceController::initAllGroupServices(void) {
     for (auto& service : serviceMap) {
         service.second->init();

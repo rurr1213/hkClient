@@ -54,7 +54,7 @@ std::string BashRemoteServer::prompt()
 //--------------------------------------------------------------------------------------------
 
 BashRemoteService::BashRemoteService(HKIAPI& hkApi) : hkAPI(hkApi),
-    HKIServerService(hkApi)
+    HKIServerServiceBase(hkApi)
 {
 }
 

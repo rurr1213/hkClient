@@ -1,8 +1,8 @@
 #pragma once
 #include "hkAPI.h"
-#include "hkIServerService.h"
+#include "hkIServerServiceBase.h"
 
-class HKShellServerService : public HKIServerService {
+class HKShellServerService : public HKIServerServiceBase {
         bool processCommand(PublishInfo& publishInfo, const std::string& command);
 
     public:
