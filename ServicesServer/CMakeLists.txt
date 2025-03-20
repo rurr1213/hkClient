@@ -24,6 +24,7 @@ include_directories(
 set(SOURCES
     Common/hkServerServiceController.cpp
     Common/hkIServerServiceBase.cpp
+    Common/hkServices.cpp
     hkDirService/hkDirService.cpp
     hkShellServerService/hkShellServerService.cpp
     VsgViewerService/vsgViewerService.cpp
