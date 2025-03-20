@@ -1,5 +1,8 @@
 #pragma once
-#include "hkAPI.h"
+#include <string>
+
+class HKIAPI;
+class PublishInfo;
 
 class HKIServerServiceBase {
 public:

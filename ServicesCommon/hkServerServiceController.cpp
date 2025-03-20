@@ -1,10 +1,12 @@
-#include "hkIServerServiceBase.h"
-#include "hkServerServiceController.h"
 
+#include "hkAPI.h"
+
+/*
 #include "hkShellServerService.h"
 #include "vsgViewerService.h"
 #include "bashRemoteService.h"
 #include "hkDirService.h"
+*/
 
 bool HKServerServiceController::init() {
     // Initialization logic

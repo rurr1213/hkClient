@@ -6,7 +6,7 @@
 #include <list>
 #include <mutex>
 #include <memory>
-#include "sthread.h"
+#include "genCppTools/sthread.h"
 
 /**
  * @defgroup GroupActivityData Group Activity Data

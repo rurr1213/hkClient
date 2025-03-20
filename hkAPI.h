@@ -3,6 +3,10 @@
 #include <string>
 
 #include "hkDeviceMgrI.h"
+#include "CommonCppDartCode/cpp/json/json.hpp"
+#include "CommonCppDartCode/cpp/Logger.h"
+#include "CommonCppDartCode/cpp/serdes.h"
+#include "CommonCppDartCode/cpp/Messages.h"
 
 typedef std::string UUIDString;
 
@@ -24,4 +28,9 @@ public:
     virtual bool publishAck(PublishInfo& publishInfo, std::string response) = 0;
 
 };
+
+#include "hkDeviceMgr.h"
+#include "ServicesCommon/hkIServerServiceBase.h"
+#include "ServicesCommon/hkServerServiceController.h"
+#include "ServicesCommon/hkServices.h"
 

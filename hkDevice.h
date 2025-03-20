@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <atomic>
 
+#include "hkAPI.h"
 #include "hkClient.h"
-#include "Logger.h"
-#include "hkDeviceMgrI.h"
+//#include "Logger.h"
+//#include "hkDeviceMgrI.h"
 
 #define BACKCHANNEL_INITIAL_SERVER_NAME "primary.hyperkube.net"
 
@@ -82,7 +83,7 @@ public:
 
 	virtual bool onConnect(void);   // tcp connection established
     virtual bool onDisconnect(void);    // tcp connection closed
-	
+
 	virtual bool onOpenForDataEvent(void);
 	virtual bool onClosedForDataEvent(void);
 	bool onReceivedData(void);

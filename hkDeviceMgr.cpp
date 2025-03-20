@@ -1,8 +1,7 @@
 #include <stdlib.h>
 
-#include "hkDeviceMgr.h"
+#include "hkAPI.h"
 #include "hkDevice.h"
-#include "Logger.h"
 
 HKDeviceMgr::HKDeviceMgr() : serviceActivity(this)
 {

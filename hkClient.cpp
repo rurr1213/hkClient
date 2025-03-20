@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "Logger.h"
+#include "hkAPI.h"
+
 #ifdef _WIN64
 #include <Winsock2.h> // before Windows.h, else Winsock 1 conflict
 #else
@@ -9,12 +10,12 @@
 #include <errno.h>
 
 #include "hkClient.h"
-#include "Common.h"
-#include "Packet.h"
-#include "mserdes.h"
-#include "kbhit.h"
-#include "clockGetTime.h"
-#include "MsgExt.h"
+#include "CommonCppDartCode/Common.h"
+#include "CommonCppDartCode/cpp/Packet.h"
+#include "CommonCppDartCode/cpp/mserdes.h"
+#include "genCppTools/kbhit.h"
+#include "genCppTools/clockGetTime.h"
+#include "CommonCppDartCode/cpp/MsgExt.h"
 #include <regex>
 
 using namespace std;

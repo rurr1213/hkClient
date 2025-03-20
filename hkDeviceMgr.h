@@ -4,12 +4,13 @@
 #include <string>
 #include <memory>
 
-#include "Packet.h"
-#include "hkDeviceMgrI.h"
-#include "msgJsonCmdPayload.h"
-#include "sthread.h"
-#include "groupActivityData.h"
 #include "hkAPI.h"
+
+//#include "hkDeviceMgrI.h"
+#include "CommonCppDartCode/cpp/msgJsonCmdPayload.h"
+#include "CommonCppDartCode/cpp/Packet.h"
+#include "genCppTools/sthread.h"
+#include "groupActivityData.h"
 
 class HKDevice;
 

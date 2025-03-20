@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <queue>
 
-#include "tcp.h"
-#include "sthread.h"
-#include "Messages.h"
-#include "mserdes.h"
-#include "Packet.h"
-#include "GenTime.h"
+#include "genCppTools/tcp.h"
+#include "genCppTools/sthread.h"
+#include "genCppTools/GenTime.h"
+#include "CommonCppDartCode/cpp/Messages.h"
+#include "CommonCppDartCode/cpp/mserdes.h"
+#include "CommonCppDartCode/cpp/Packet.h"
 
 #define HYPERCUBE_SERVER_NAME_PRIMARY "primary.hyperkube.net"
 #define HYPERCUBE_SERVER_NAME_SECONDARY "secondary.hyperkube.net"

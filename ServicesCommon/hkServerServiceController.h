@@ -2,9 +2,8 @@
 
 #include <map>
 #include <string>
-#include "hkIServerServiceBase.h"
-#include "Messages.h"
-#include "Logger.h"
+
+#include "hkAPI.h"
 
 
 class HKServerServiceController {

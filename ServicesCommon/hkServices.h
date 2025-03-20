@@ -1,7 +1,6 @@
 #pragma once
 
-//#include <memory>
-#include "hkDeviceMgr.h"
+//#include "hkDeviceMgr.h"
 #include "hkServerServiceController.h"
 
 class HKServices;
