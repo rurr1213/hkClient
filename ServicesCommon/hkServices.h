@@ -21,8 +21,8 @@ class HKServices : public HKDeviceMgr
 
         HKServices();
         ~HKServices();
-        bool start(void);
-        bool stop(void);
+        bool init(void);
+        bool deinit(void);
         bool onConnect(void);
         bool onDisconnect(void);
         bool startServices(void);

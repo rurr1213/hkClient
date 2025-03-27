@@ -32,7 +32,9 @@ HKServices::HKServices() :
 HKServices::~HKServices() {
 }
 
-bool HKServices::start(void) {
+bool HKServices::init(void) {
+
+    hkServerServiceController.init();
 
     pShellMsgDecoder = std::make_unique<ShellMsgDecoder>(*this);
 
@@ -54,9 +56,10 @@ bool HKServices::start(void) {
     return status;
 }
 
-bool HKServices::stop(void) {
+bool HKServices::deinit(void) {
     bool status = HKDeviceMgr::deinit();
     pShellMsgDecoder  = nullptr;
+    hkServerServiceController.deinit();
     return status;
 }
 
