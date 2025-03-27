@@ -55,9 +55,9 @@ bool HKServices::start(void) {
 }
 
 bool HKServices::stop(void) {
+    bool status = HKDeviceMgr::deinit();
     pShellMsgDecoder  = nullptr;
-
-    return HKDeviceMgr::deinit();
+    return status;
 }
 
 bool HKServices::registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice) {
