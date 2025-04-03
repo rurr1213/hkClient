@@ -33,6 +33,17 @@ bool HKServerServiceController::registerGroupService(const std::string& groupNam
     return false;
 }
 
+bool HKServerServiceController::unregisterGroupService(const std::string& groupName) {
+    if (serviceMap.find(groupName) != serviceMap.end()) {
+        std::shared_ptr<HKIServerServiceBase> pservice = serviceMap[groupName];
+        pservice->deinit();
+        pservice = nullptr;
+        serviceMap.erase(groupName);
+        return true;
+    }
+    return false;
+}
+
 std::shared_ptr<HKIServerServiceBase> HKServerServiceController::getService(std::string groupName) {
     if (serviceMap.find(groupName) != serviceMap.end()) {
         return serviceMap[groupName];

@@ -14,6 +14,7 @@ public:
     bool init();
     bool deinit();
     bool registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice);
+    bool unregisterGroupService(const std::string& groupName);
     std::shared_ptr<HKIServerServiceBase> getService(std::string groupName);
     bool initAllGroupServices(void);
     bool deinitAllGroupServices(void);

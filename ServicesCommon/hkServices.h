@@ -28,6 +28,7 @@ class HKServices : public HKDeviceMgr
         bool startServices(void);
         bool stopServices(void);
         bool registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice);
+        bool unregisterGroupService(const std::string& groupName);
         virtual bool onPublishInfo(PublishInfo& publishInfo);
 
         bool processCommand(PublishInfo& publishInfo, const std::string& command);

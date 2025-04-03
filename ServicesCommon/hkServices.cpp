@@ -70,6 +70,13 @@ bool HKServices::registerGroupService(const std::string& groupName, std::shared_
     return true;
 }
 
+bool HKServices::unregisterGroupService(const std::string& groupName) {
+    if (!hkServerServiceController.unregisterGroupService(groupName))
+        return false;
+
+    return true;
+}
+
 bool HKServices::startServices(void) {
 
     bool status = hkServerServiceController.init();

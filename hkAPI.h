@@ -7,6 +7,7 @@
 #include "CommonCppDartCode/cpp/Logger.h"
 #include "CommonCppDartCode/cpp/serdes.h"
 #include "CommonCppDartCode/cpp/Messages.h"
+#include "genCppTools/sthread.h"
 
 typedef std::string UUIDString;
 
