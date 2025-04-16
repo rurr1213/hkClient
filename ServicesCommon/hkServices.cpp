@@ -64,17 +64,19 @@ bool HKServices::deinit(void) {
 }
 
 bool HKServices::registerGroupService(const std::string& groupName, std::shared_ptr<HKIServerServiceBase> pservice) {
-    if (!hkServerServiceController.registerGroupService(groupName, pservice))
-        return false;
-
-    return true;
+    return  hkServerServiceController.registerGroupService(groupName, pservice);
 }
 
 bool HKServices::unregisterGroupService(const std::string& groupName) {
-    if (!hkServerServiceController.unregisterGroupService(groupName))
-        return false;
+    return !hkServerServiceController.unregisterGroupService(groupName);
+}
 
-    return true;
+bool HKServices::initService(const std::string& groupName) {
+    return hkServerServiceController.initService(groupName);
+}
+
+bool HKServices::deinitService(const std::string& groupName) {
+    return hkServerServiceController.deinitService(groupName);
 }
 
 bool HKServices::startServices(void) {

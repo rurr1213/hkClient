@@ -4,7 +4,7 @@
 #include <string>
 
 #include "hkAPI.h"
-
+#include "hkServiceMap.h"
 
 class HKServerServiceController {
     HKIAPI& hkApi;
@@ -19,7 +19,9 @@ public:
     bool initAllGroupServices(void);
     bool deinitAllGroupServices(void);
     bool onPublishInfo(PublishInfo& publishInfo);
+    bool initService(std::string groupName);
+    bool deinitService(std::string groupName);
 
 private:
-    std::map<std::string, std::shared_ptr<HKIServerServiceBase>> serviceMap;
+    HKServiceMap serviceMap;
 };

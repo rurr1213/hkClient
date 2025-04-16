@@ -31,6 +31,9 @@ class HKServices : public HKDeviceMgr
         bool unregisterGroupService(const std::string& groupName);
         virtual bool onPublishInfo(PublishInfo& publishInfo);
 
+        bool initService(const std::string& groupName);
+        bool deinitService(const std::string& groupName);
+
         bool processCommand(PublishInfo& publishInfo, const std::string& command);
 };
 
